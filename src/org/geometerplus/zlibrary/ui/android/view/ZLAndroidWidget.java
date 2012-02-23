@@ -19,16 +19,23 @@
 
 package org.geometerplus.zlibrary.ui.android.view;
 
-import android.content.Context;
-import android.graphics.*;
-import android.view.*;
-import android.util.AttributeSet;
-
+import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
-import org.geometerplus.zlibrary.core.application.ZLApplication;
-
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidActivity;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.util.AttributeSet;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+
+import com.onyx.android.sdk.ui.util.ScreenUpdateManager;
+import com.onyx.android.sdk.ui.util.ScreenUpdateManager.UpdateMode;
 
 public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongClickListener {
 	private final Paint myPaint = new Paint();
@@ -126,7 +133,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		if (animator.inProgress()) {
 			animator.draw(canvas);
 			if (animator.getMode().Auto) {
-				postInvalidate();
+				ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 			}
 			drawFooter(canvas);
 		} else {
@@ -166,7 +173,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		final AnimationProvider animator = getAnimationProvider();
 		if (view.canScroll(animator.getPageToScrollTo(x, y))) {
 			animator.scrollTo(x, y);
-			postInvalidate();
+			ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 		}
 	}
 
@@ -179,7 +186,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, x, y, speed);
 		if (animator.getMode().Auto) {
-			postInvalidate();
+		    ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 		}
 	}
 
@@ -192,7 +199,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, null, null, speed);
 		if (animator.getMode().Auto) {
-			postInvalidate();
+		    ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 		}
 	}
 
@@ -204,7 +211,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 			return;
 		}
 		animator.startAnimatedScrolling(x, y, speed);
-		postInvalidate();
+		ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 	}
 
 	void drawOnBitmap(Bitmap bitmap, ZLView.PageIndex index) {

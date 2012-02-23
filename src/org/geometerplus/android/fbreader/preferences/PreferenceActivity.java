@@ -19,28 +19,35 @@
 
 package org.geometerplus.android.fbreader.preferences;
 
-import android.content.Intent;
-import android.view.KeyEvent;
-
+import org.geometerplus.android.fbreader.DictionaryUtil;
+import org.geometerplus.android.fbreader.FBReader;
+import org.geometerplus.fbreader.Paths;
+import org.geometerplus.fbreader.bookmodel.FBTextKind;
+import org.geometerplus.fbreader.fbreader.ActionCode;
+import org.geometerplus.fbreader.fbreader.ColorProfile;
+import org.geometerplus.fbreader.fbreader.FBReaderApp;
+import org.geometerplus.fbreader.fbreader.FBView;
+import org.geometerplus.fbreader.fbreader.ScrollingPreferences;
+import org.geometerplus.fbreader.tips.TipsManager;
 import org.geometerplus.zlibrary.core.application.ZLKeyBindings;
 import org.geometerplus.zlibrary.core.options.ZLIntegerOption;
 import org.geometerplus.zlibrary.core.options.ZLIntegerRangeOption;
-
-import org.geometerplus.zlibrary.text.view.style.*;
-
+import org.geometerplus.zlibrary.text.view.style.ZLTextBaseStyle;
+import org.geometerplus.zlibrary.text.view.style.ZLTextFullStyleDecoration;
+import org.geometerplus.zlibrary.text.view.style.ZLTextStyleCollection;
+import org.geometerplus.zlibrary.text.view.style.ZLTextStyleDecoration;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
 import org.geometerplus.zlibrary.ui.android.view.AndroidFontUtil;
 import org.geometerplus.zlibrary.ui.android.view.ZLAndroidPaintContext;
 
-import org.geometerplus.fbreader.fbreader.*;
-import org.geometerplus.fbreader.Paths;
-import org.geometerplus.fbreader.bookmodel.FBTextKind;
-import org.geometerplus.fbreader.tips.TipsManager;
-
-import org.geometerplus.android.fbreader.FBReader;
-import org.geometerplus.android.fbreader.DictionaryUtil;
+import android.content.Intent;
+import android.preference.Preference;
+import android.preference.PreferenceScreen;
+import android.view.KeyEvent;
 
 public class PreferenceActivity extends ZLPreferenceActivity {
+    private static final String TAG = "PreferenceActivity";
+    
 	public PreferenceActivity() {
 		super("Preferences");
 	}
@@ -462,5 +469,13 @@ public class PreferenceActivity extends ZLPreferenceActivity {
 		aboutScreen.addPreference(new UrlPreference(this, aboutScreen.Resource, "site"));
 		aboutScreen.addPreference(new UrlPreference(this, aboutScreen.Resource, "email"));
 		aboutScreen.addPreference(new UrlPreference(this, aboutScreen.Resource, "twitter"));
+	}
+	
+	@Override
+	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+	        Preference preference)
+	{
+	    ((PreferenceScreen)preference).getDialog().getWindow().setBackgroundDrawableResource(android.R.drawable.screen_background_light);
+	    return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 }
