@@ -19,24 +19,38 @@
 
 package org.geometerplus.fbreader.library;
 
-import java.lang.ref.WeakReference;
-import java.util.*;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import org.geometerplus.zlibrary.core.util.ZLMiscUtil;
-import org.geometerplus.zlibrary.core.filesystem.*;
-import org.geometerplus.zlibrary.core.image.ZLImage;
-
-import org.geometerplus.zlibrary.text.view.ZLTextPosition;
-
-import org.geometerplus.fbreader.formats.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Formatter;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.geometerplus.fbreader.Paths;
+import org.geometerplus.fbreader.formats.FormatPlugin;
+import org.geometerplus.fbreader.formats.PluginCollection;
+import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.filesystem.ZLPhysicalFile;
+import org.geometerplus.zlibrary.core.image.ZLImage;
+import org.geometerplus.zlibrary.core.util.ZLMiscUtil;
+import org.geometerplus.zlibrary.text.view.ZLTextPosition;
+import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.onyx.android.sdk.data.cms.OnyxCmsCenter;
+import com.onyx.android.sdk.data.cms.OnyxMetadata;
+import com.onyx.android.sdk.data.util.FileUtil;
 
 public class Book {
+    private static final String TAG = "Book";
+    
 	public static Book getById(long bookId) {
 		final Book book = BooksDatabase.Instance().loadBook(bookId);
 		if (book == null) {
@@ -370,6 +384,75 @@ public class Book {
 				database.saveBookSeriesInfo(myId, mySeriesInfo);
 			}
 		});
+		
+		try {
+		    OnyxMetadata data = new OnyxMetadata();
+		    java.io.File file = new java.io.File(File.getPath());
+		    
+            long time_point = System.currentTimeMillis();
+            String md5 = FileUtil.computeMD5(file);
+            long time_md5 = System.currentTimeMillis() - time_point;
+            Log.d(TAG, "times md5: " + time_md5);
+
+            data.setMD5(md5);
+            data.setName(file.getName());
+            data.setLocation(file.getAbsolutePath());
+            data.setSize(file.length());
+            data.setlastModified(file.lastModified());
+            data.setNativeAbsolutePath(file.getAbsolutePath());
+            
+            Context ctx = ((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).getActivity();
+            if (OnyxCmsCenter.getMetadata(ctx, data)) {
+                data.setTitle(myTitle);
+                ArrayList<String> authors = new ArrayList<String>();
+                if (myAuthors != null) {
+                    for (Author a : myAuthors) {
+                        authors.add(a.DisplayName);
+                    }
+                }
+                data.setAuthors(authors);
+                data.setLanguage(myLanguage);
+                data.setEncoding(myEncoding);
+                ArrayList<String> tags = new ArrayList<String>();
+                if (myTags != null) {
+                    for (Tag t : myTags) {
+                        tags.add(t.Name);
+                    }
+                    data.setTags(tags);
+                }
+                
+                OnyxCmsCenter.updateMetadata(ctx, data);
+            }
+            else {
+                data.setTitle(myTitle);
+                ArrayList<String> authors = new ArrayList<String>();
+                if (myAuthors != null) {
+                    for (Author a : myAuthors) {
+                        authors.add(a.DisplayName);
+                    }
+                }
+                data.setAuthors(authors);
+                data.setLanguage(myLanguage);
+                data.setEncoding(myEncoding);
+                ArrayList<String> tags = new ArrayList<String>();
+                if (myTags != null) {
+                    for (Tag t : myTags) {
+                        tags.add(t.Name);
+                    }
+                    data.setTags(tags);
+                }
+                
+                OnyxCmsCenter.insertMetadata(ctx, data);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            Log.w(TAG, "exception caught: ", e);
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.w(TAG, "exception caught: ", e);
+            return false;
+        } 
 
 		myIsSaved = true;
 		return true;
