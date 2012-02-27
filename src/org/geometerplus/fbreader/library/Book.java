@@ -397,9 +397,9 @@ public class Book {
             data.setMD5(md5);
             data.setName(file.getName());
             data.setLocation(file.getAbsolutePath());
+            data.setNativeAbsolutePath(file.getAbsolutePath());
             data.setSize(file.length());
             data.setlastModified(file.lastModified());
-            data.setNativeAbsolutePath(file.getAbsolutePath());
             
             Context ctx = ((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).getActivity();
             if (OnyxCmsCenter.getMetadata(ctx, data)) {
