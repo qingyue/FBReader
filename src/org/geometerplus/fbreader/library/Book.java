@@ -36,17 +36,25 @@ import org.geometerplus.fbreader.formats.FormatPlugin;
 import org.geometerplus.fbreader.formats.PluginCollection;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.filesystem.ZLPhysicalFile;
+import org.geometerplus.zlibrary.core.image.ZLFileImage;
 import org.geometerplus.zlibrary.core.image.ZLImage;
+import org.geometerplus.zlibrary.core.image.ZLLoadableImage;
 import org.geometerplus.zlibrary.core.util.ZLMiscUtil;
 import org.geometerplus.zlibrary.text.view.ZLTextPosition;
+import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageData;
+import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageManager;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.onyx.android.sdk.data.cms.OnyxCmsCenter;
 import com.onyx.android.sdk.data.cms.OnyxMetadata;
 import com.onyx.android.sdk.data.util.FileUtil;
+import com.onyx.android.sdk.data.util.RefValue;
 
 public class Book {
     private static final String TAG = "Book";
@@ -443,6 +451,46 @@ public class Book {
                 }
                 
                 OnyxCmsCenter.insertMetadata(ctx, data);
+            }
+            
+            Log.d(TAG, "check cover");
+            ZLImage image = this.getCover();
+            if (image != null) {
+                Log.d(TAG, "cover is not null");
+                RefValue<Bitmap> result = new RefValue<Bitmap>();
+                if (!OnyxCmsCenter.getThumbnail(ctx, data, result)) {
+                    if (image instanceof ZLLoadableImage) {
+                        final ZLLoadableImage loadableImage = (ZLLoadableImage)image;
+                        if (!loadableImage.isSynchronized()) {
+                            loadableImage.synchronize();
+                        }
+                    }
+                    
+                    final ZLAndroidImageData image_data =
+                            ((ZLAndroidImageManager)ZLAndroidImageManager.Instance()).getImageData(image);
+                    if (image_data != null) {
+                        Log.d(TAG, "image data not null, begin insert thumbnail");
+                        final DisplayMetrics metrics = new DisplayMetrics();
+                        Activity a = ((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).getActivity();
+                        a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+                        final int maxHeight = metrics.heightPixels * 2 / 3;
+                        final int maxWidth = maxHeight * 2 / 3;
+                        final Bitmap cover = image_data.getBitmap(2 * maxWidth, 2 * maxHeight);
+                        if (cover != null) {
+                            Log.d(TAG, "cover bitmap is not null"); 
+                            if (!OnyxCmsCenter.insertThumbnail(ctx, data, cover)) {
+                                Log.d(TAG, "insert thumbnail failed");
+                            }
+                            else {
+                                Log.d(TAG, "insert thumbnail successfully");
+                            }
+                        }
+                        else {
+                            Log.d(TAG, "cover bitmap is null"); 
+                        }
+                    }
+                }
             }
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
