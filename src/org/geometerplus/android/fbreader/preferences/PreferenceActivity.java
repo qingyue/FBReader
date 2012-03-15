@@ -46,6 +46,7 @@ import android.preference.PreferenceScreen;
 import android.view.KeyEvent;
 
 public class PreferenceActivity extends ZLPreferenceActivity {
+    @SuppressWarnings("unused")
     private static final String TAG = "PreferenceActivity";
     
 	public PreferenceActivity() {
@@ -475,7 +476,12 @@ public class PreferenceActivity extends ZLPreferenceActivity {
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
 	        Preference preference)
 	{
-	    ((PreferenceScreen)preference).getDialog().getWindow().setBackgroundDrawableResource(android.R.drawable.screen_background_light);
+	    if (preference instanceof PreferenceScreen) {
+	        // manually set sub-PreferenceScreen's background to screen_background_light, 
+	        // or it will use hard-coded "com.android.internal.R.style.Theme" which is for dark background
+	        ((PreferenceScreen)preference).getDialog().getWindow().setBackgroundDrawableResource(
+	                android.R.drawable.screen_background_light);
+	    }
 	    return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 }
