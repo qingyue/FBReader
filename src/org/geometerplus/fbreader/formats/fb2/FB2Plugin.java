@@ -20,25 +20,25 @@
 package org.geometerplus.fbreader.formats.fb2;
 
 import org.geometerplus.fbreader.bookmodel.BookModel;
+import org.geometerplus.fbreader.bookmodel.BookReadingException;
 import org.geometerplus.fbreader.library.Book;
 import org.geometerplus.fbreader.formats.JavaFormatPlugin;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.image.ZLImage;
 
 public class FB2Plugin extends JavaFormatPlugin {
-	@Override
-	public boolean acceptsFile(ZLFile file) {
-		return "fb2".equals(file.getExtension());
+	public FB2Plugin() {
+		super("fb2");
 	}
 
 	@Override
-	public boolean readMetaInfo(Book book) {
-		return new FB2MetaInfoReader(book).readMetaInfo();
+	public void readMetaInfo(Book book) throws BookReadingException {
+		new FB2MetaInfoReader(book).readMetaInfo();
 	}
 
 	@Override
-	public boolean readModel(BookModel model) {
-		return new FB2Reader(model).readBook();
+	public void readModel(BookModel model) throws BookReadingException {
+		new FB2Reader(model).readBook();
 	}
 
 	@Override
