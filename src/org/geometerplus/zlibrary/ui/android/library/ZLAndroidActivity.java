@@ -24,12 +24,14 @@ import java.lang.reflect.*;
 import android.app.Activity;
 import android.os.Bundle;
 import android.content.*;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.view.*;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.os.PowerManager;
 
+import org.geometerplus.fbreader.fbreader.ActionCode;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
+import org.geometerplus.zlibrary.core.application.ZLApplication.PageChangeListener;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 
 import org.geometerplus.zlibrary.ui.android.R;
@@ -41,6 +43,12 @@ public abstract class ZLAndroidActivity extends Activity {
 	private static final String REQUESTED_ORIENTATION_KEY = "org.geometerplus.zlibrary.ui.android.library.androidActiviy.RequestedOrientation";
 	private static final String ORIENTATION_CHANGE_COUNTER_KEY = "org.geometerplus.zlibrary.ui.android.library.androidActiviy.ChangeCounter";
 
+    private TextView currentPage;
+    private TextView totalPage;
+    private ImageButton prevButton;
+    private ImageButton nextButton;
+	
+	
 	private void setScreenBrightnessAuto() {
 		final WindowManager.LayoutParams attrs = getWindow().getAttributes();
 		attrs.screenBrightness = -1.0f;
@@ -83,7 +91,7 @@ public abstract class ZLAndroidActivity extends Activity {
 	@Override
 	public void onCreate(Bundle state) {
 		super.onCreate(state);
-
+		
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler(this));
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -107,6 +115,43 @@ public abstract class ZLAndroidActivity extends Activity {
 		}.start();
 
 		ZLApplication.Instance().getViewWidget().repaint();
+		
+		currentPage = (TextView)this.findViewById(R.id.current_page);
+        totalPage = (TextView)this.findViewById(R.id.total_page);
+        prevButton = (ImageButton)this.findViewById(R.id.prev_page_button);
+        prevButton.setOnClickListener(new View.OnClickListener()
+        {
+            
+            @Override
+            public void onClick(View v)
+            {
+                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_BACK, 71, 303);
+            }
+        });
+        nextButton = (ImageButton)this.findViewById(R.id.next_page_button);
+        nextButton.setOnClickListener(new View.OnClickListener()
+        {
+            
+            @Override
+            public void onClick(View v)
+            {
+                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD, 546, 367);
+                
+            }
+        });
+        
+		ZLApplication ZLApp = ZLApplication.Instance();
+		ZLApp.setPageChangeListener(new PageChangeListener()
+        {
+            
+            @Override
+            public void UpdateFooter(int current, int total)
+            {
+                currentPage.setText(Integer.toString(current));
+                totalPage.setText(Integer.toString(total));
+                
+            }
+        });
 	}
 
 	protected abstract Runnable getPostponedInitAction();
@@ -199,7 +244,7 @@ public abstract class ZLAndroidActivity extends Activity {
 	private static ZLAndroidLibrary getLibrary() {
 		return (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
 	}
-
+	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		View view = findViewById(R.id.main_view);
@@ -222,4 +267,5 @@ public abstract class ZLAndroidActivity extends Activity {
 			);
 		}
 	};
+
 }

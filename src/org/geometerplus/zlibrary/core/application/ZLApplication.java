@@ -21,10 +21,16 @@ package org.geometerplus.zlibrary.core.application;
 
 import java.util.*;
 
+import org.geometerplus.fbreader.fbreader.ActionCode;
+import org.geometerplus.fbreader.fbreader.FBView;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.util.ZLBoolean3;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
+import org.geometerplus.zlibrary.ui.android.library.ZLAndroidActivity;
+
+import android.util.Log;
+import android.view.View;
 
 public abstract class ZLApplication {
 	public static ZLApplication Instance() {
@@ -39,7 +45,7 @@ public abstract class ZLApplication {
 	private volatile ZLView myView;
 
 	private final HashMap<String,ZLAction> myIdToActionMap = new HashMap<String,ZLAction>();
-
+	
 	protected ZLApplication() {
 		ourInstance = this;
 	}
@@ -139,6 +145,10 @@ public abstract class ZLApplication {
 		final ZLAction action = myIdToActionMap.get(actionId);
 		if (action != null) {
 			action.checkAndRun(params);
+		}
+		
+		if(actionId == ActionCode.TURN_PAGE_BACK || actionId == ActionCode.TURN_PAGE_FORWARD) {
+		 ChangePage();
 		}
 	}
 
@@ -290,4 +300,32 @@ public abstract class ZLApplication {
 			myTimerTaskPeriods.remove(runnable);
 		}
 	}
+	
+	public interface PageChangeListener {
+	    void UpdateFooter(int current, int total);
+	}
+	
+	private PageChangeListener mPageChangeListener = new PageChangeListener()
+    {
+        
+        @Override
+        public void UpdateFooter(int current, int total)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+    };
+    
+    public void ChangePage() {
+        FBView view = (FBView)myView;
+        int current = view.pagePosition().Current;
+        int total = view.pagePosition().Total;
+        mPageChangeListener.UpdateFooter(current, total);
+    }
+
+    public void setPageChangeListener(PageChangeListener pageChangeListener)
+    {
+        mPageChangeListener = pageChangeListener;
+        
+    }
 }

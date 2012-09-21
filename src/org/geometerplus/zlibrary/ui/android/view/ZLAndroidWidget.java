@@ -135,7 +135,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 			if (animator.getMode().Auto) {
 				ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 			}
-			drawFooter(canvas);
+//			drawFooter(canvas);
 		} else {
 			switch (oldMode) {
 				case AnimatedScrollingForward:
@@ -259,7 +259,8 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	private void onDrawStatic(Canvas canvas) {
 		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
-		drawFooter(canvas);
+//		drawFooter(canvas);
+		ZLApplication.Instance().ChangePage();
 	}
 
 	@Override
