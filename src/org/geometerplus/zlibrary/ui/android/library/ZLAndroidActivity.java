@@ -47,6 +47,7 @@ public abstract class ZLAndroidActivity extends Activity {
     private TextView totalPage;
     private ImageButton prevButton;
     private ImageButton nextButton;
+    private ImageButton menuButton;
 	
 	
 	private void setScreenBrightnessAuto() {
@@ -136,6 +137,17 @@ public abstract class ZLAndroidActivity extends Activity {
             public void onClick(View v)
             {
                 ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD, 546, 367);
+                
+            }
+        });
+        menuButton = (ImageButton)this.findViewById(R.id.menu_button);
+        menuButton.setOnClickListener(new View.OnClickListener()
+        {
+            
+            @Override
+            public void onClick(View v)
+            {
+                ZLApplication.Instance().doAction(ActionCode.SHOW_DIALOG_TOC);
                 
             }
         });

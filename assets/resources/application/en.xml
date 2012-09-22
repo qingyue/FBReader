@@ -255,6 +255,8 @@
 		<node name="screenOrientationReverseLandscape" value="Reverse landscape"/>
 		<node name="increaseFont" value="Zoom in"/>
 		<node name="decreaseFont" value="Zoom out"/>
+		<node name="increaseLineSpacing" value="+Space"/>
+        <node name="decreaseLineSpacing" value="-Space"/>
 		<node name="toggleFullscreen" value="Full Screen"/>
 		<node name="bookmarks" value="Bookmarks"/>
 	</node>

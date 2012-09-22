@@ -27,10 +27,6 @@ import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.util.ZLBoolean3;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
-import org.geometerplus.zlibrary.ui.android.library.ZLAndroidActivity;
-
-import android.util.Log;
-import android.view.View;
 
 public abstract class ZLApplication {
 	public static ZLApplication Instance() {

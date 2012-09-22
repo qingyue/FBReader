@@ -2,4 +2,5 @@
 <resources>
 	<string name="empty_string"></string>
 	<string name="slash">/</string>
+	<string name="hint"></string>
 </resources>

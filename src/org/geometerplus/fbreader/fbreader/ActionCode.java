@@ -64,6 +64,9 @@ public interface ActionCode {
 
 	String INCREASE_FONT = "increaseFont";
 	String DECREASE_FONT = "decreaseFont";
+	
+	String INCREASE_LINESPACING = "increaseLineSpacing";
+	String DECREASE_LINESPACING = "decreaseLineSpacing";
 
 	String PROCESS_HYPERLINK = "processHyperlink";
 
@@ -74,4 +77,6 @@ public interface ActionCode {
 	String SELECTION_SHARE = "selectionShare";
 	String SELECTION_TRANSLATE = "selectionTranslate";
 	String SELECTION_BOOKMARK = "selectionBookmark";
+	
+	String SHOW_DIALOG_TOC = "showdialogtoc";
 }
