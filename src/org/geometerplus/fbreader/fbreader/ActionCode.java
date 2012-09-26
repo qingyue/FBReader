@@ -79,4 +79,5 @@ public interface ActionCode {
 	String SELECTION_BOOKMARK = "selectionBookmark";
 	
 	String SHOW_DIALOG_TOC = "showdialogtoc";
+	String SHOW_DIALOG_MENU = "showdialogmenu";
 }

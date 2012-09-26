@@ -147,7 +147,7 @@ public abstract class ZLAndroidActivity extends Activity {
             @Override
             public void onClick(View v)
             {
-                ZLApplication.Instance().doAction(ActionCode.SHOW_DIALOG_TOC);
+                ZLApplication.Instance().doAction(ActionCode.SHOW_DIALOG_MENU);
                 
             }
         });

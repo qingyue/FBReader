@@ -111,8 +111,8 @@ public final class FBReaderApp extends ZLApplication {
 		addAction(ActionCode.INCREASE_FONT, new ChangeFontSizeAction(this, +2));
 		addAction(ActionCode.DECREASE_FONT, new ChangeFontSizeAction(this, -2));
 		
-		addAction(ActionCode.INCREASE_LINESPACING, new ChangeLinespacingAction(this, +1));
-		addAction(ActionCode.DECREASE_LINESPACING, new ChangeLinespacingAction(this, -1));
+		addAction(ActionCode.INCREASE_LINESPACING, new ChangeLineSpacingAction(this, +1));
+		addAction(ActionCode.DECREASE_LINESPACING, new ChangeLineSpacingAction(this, -1));
 
 		addAction(ActionCode.FIND_NEXT, new FindNextAction(this));
 		addAction(ActionCode.FIND_PREVIOUS, new FindPreviousAction(this));
