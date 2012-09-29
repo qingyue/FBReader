@@ -45,6 +45,9 @@ import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageData;
 import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageManager;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
 
+import org.geometerplus.fbreader.formats.*;
+import org.geometerplus.fbreader.bookmodel.BookReadingException;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -172,7 +175,12 @@ public class Book {
 		myIsSaved = false;
 
 		final FormatPlugin plugin = PluginCollection.Instance().getPlugin(File);
-		if (plugin == null || !plugin.readMetaInfo(this)) {
+		if (plugin == null) {
+			return false;
+		}
+		try {
+			plugin.readMetaInfo(this);
+		} catch (BookReadingException e) {
 			return false;
 		}
 		if (myTitle == null || myTitle.length() == 0) {

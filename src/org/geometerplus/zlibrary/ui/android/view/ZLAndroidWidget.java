@@ -19,13 +19,17 @@
 
 package org.geometerplus.zlibrary.ui.android.view;
 
+import org.geometerplus.fbreader.fbreader.ActionCode;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
+import org.geometerplus.zlibrary.ui.android.R;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidActivity;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
@@ -41,6 +45,8 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	private final Paint myPaint = new Paint();
 	private final BitmapManager myBitmapManager = new BitmapManager(this);
 	private Bitmap myFooterBitmap;
+	
+	private Bitmap BookmarkBitmap;
 
 	public ZLAndroidWidget(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -136,6 +142,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 				ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 			}
 			drawFooter(canvas);
+			drawBookmarkIcon(canvas);
 		} else {
 			switch (oldMode) {
 				case AnimatedScrollingForward:
@@ -255,11 +262,21 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		footer.paint(context);
 		canvas.drawBitmap(myFooterBitmap, 0, getHeight() - footer.getHeight(), myPaint);
 	}
+	
+	private void drawBookmarkIcon(Canvas canvas) {
+	    Resources res = getResources();
+	    BookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
+	    Paint paint = new Paint();
+	    paint.setAlpha(100);
+	    canvas.drawBitmap(BookmarkBitmap, 678, 0, paint);
+	}
 
 	private void onDrawStatic(Canvas canvas) {
 		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
+		drawBookmarkIcon(canvas);
 		drawFooter(canvas);
+		ZLApplication.Instance().ChangePage();
 	}
 
 	@Override
@@ -330,7 +347,11 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
         					}
         					postDelayed(myPendingShortClickRunnable, ViewConfiguration.getDoubleTapTimeout());
 						} else {
-							view.onFingerSingleTap(x, y);
+						    if(x >= 678 && x < BookmarkBitmap.getWidth() + 678 && y < BookmarkBitmap.getHeight()) {
+						        ZLApplication.Instance().doAction(ActionCode.ADD_BOOKMARK);
+						    } else {
+			                    view.onFingerSingleTap(x, y);
+                            }
 						}
 					} else {
 						view.onFingerRelease(x, y);

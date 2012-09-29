@@ -21,6 +21,8 @@ package org.geometerplus.zlibrary.core.application;
 
 import java.util.*;
 
+import org.geometerplus.fbreader.fbreader.ActionCode;
+import org.geometerplus.fbreader.fbreader.FBView;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.util.ZLBoolean3;
 import org.geometerplus.zlibrary.core.view.ZLView;
@@ -39,7 +41,7 @@ public abstract class ZLApplication {
 	private volatile ZLView myView;
 
 	private final HashMap<String,ZLAction> myIdToActionMap = new HashMap<String,ZLAction>();
-
+	
 	protected ZLApplication() {
 		ourInstance = this;
 	}
@@ -74,9 +76,9 @@ public abstract class ZLApplication {
 		}
 	}
 
-	protected void runWithMessage(String key, Runnable runnable) {
+	protected void runWithMessage(String key, Runnable runnable, Runnable postAction) {
 		if (myWindow != null) {
-			myWindow.runWithMessage(key, runnable);
+			myWindow.runWithMessage(key, runnable, postAction);
 		}
 	}
 
@@ -140,6 +142,10 @@ public abstract class ZLApplication {
 		if (action != null) {
 			action.checkAndRun(params);
 		}
+		
+		if(actionId == ActionCode.TURN_PAGE_BACK || actionId == ActionCode.TURN_PAGE_FORWARD) {
+		 ChangePage();
+		}
 	}
 
 	//may be protected
@@ -170,7 +176,7 @@ public abstract class ZLApplication {
 	public void onWindowClosing() {
 	}
 
-	public abstract void openFile(ZLFile file);
+	public abstract void openFile(ZLFile file, Runnable postAction);
 
 	//Action
 	static abstract public class ZLAction {
@@ -290,4 +296,32 @@ public abstract class ZLApplication {
 			myTimerTaskPeriods.remove(runnable);
 		}
 	}
+	
+	public interface PageChangeListener {
+	    void UpdateFooter(int current, int total);
+	}
+	
+	private PageChangeListener mPageChangeListener = new PageChangeListener()
+    {
+        
+        @Override
+        public void UpdateFooter(int current, int total)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+    };
+    
+    public void ChangePage() {
+        FBView view = (FBView)myView;
+        int current = view.pagePosition().Current;
+        int total = view.pagePosition().Total;
+        mPageChangeListener.UpdateFooter(current, total);
+    }
+
+    public void setPageChangeListener(PageChangeListener pageChangeListener)
+    {
+        mPageChangeListener = pageChangeListener;
+        
+    }
 }
