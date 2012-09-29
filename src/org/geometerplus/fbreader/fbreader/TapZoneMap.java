@@ -59,7 +59,7 @@ public class TapZoneMap {
 			case singleTap:
 			{
 				final String action = myZoneMap.get(zone);
-				return action != null ? action : "menu";
+				return action != null ? action : "showdialogmenu";
 			}
 			case singleNotDoubleTap:
 			{

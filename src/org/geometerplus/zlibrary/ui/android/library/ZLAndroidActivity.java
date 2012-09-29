@@ -43,11 +43,11 @@ public abstract class ZLAndroidActivity extends Activity {
 	private static final String REQUESTED_ORIENTATION_KEY = "org.geometerplus.zlibrary.ui.android.library.androidActiviy.RequestedOrientation";
 	private static final String ORIENTATION_CHANGE_COUNTER_KEY = "org.geometerplus.zlibrary.ui.android.library.androidActiviy.ChangeCounter";
 
-    private TextView currentPage;
-    private TextView totalPage;
-    private ImageButton prevButton;
-    private ImageButton nextButton;
-    private ImageButton menuButton;
+//    private TextView currentPage;
+//    private TextView totalPage;
+//    private ImageButton prevButton;
+//    private ImageButton nextButton;
+//    private ImageButton menuButton;
 	
 	
 	private void setScreenBrightnessAuto() {
@@ -117,53 +117,53 @@ public abstract class ZLAndroidActivity extends Activity {
 
 		ZLApplication.Instance().getViewWidget().repaint();
 		
-		currentPage = (TextView)this.findViewById(R.id.current_page);
-        totalPage = (TextView)this.findViewById(R.id.total_page);
-        prevButton = (ImageButton)this.findViewById(R.id.prev_page_button);
-        prevButton.setOnClickListener(new View.OnClickListener()
-        {
-            
-            @Override
-            public void onClick(View v)
-            {
-                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_BACK, 71, 303);
-            }
-        });
-        nextButton = (ImageButton)this.findViewById(R.id.next_page_button);
-        nextButton.setOnClickListener(new View.OnClickListener()
-        {
-            
-            @Override
-            public void onClick(View v)
-            {
-                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD, 546, 367);
-                
-            }
-        });
-        menuButton = (ImageButton)this.findViewById(R.id.menu_button);
-        menuButton.setOnClickListener(new View.OnClickListener()
-        {
-            
-            @Override
-            public void onClick(View v)
-            {
-                ZLApplication.Instance().doAction(ActionCode.SHOW_DIALOG_MENU);
-                
-            }
-        });
-        
-		ZLApplication ZLApp = ZLApplication.Instance();
-		ZLApp.setPageChangeListener(new PageChangeListener()
-        {
-            
-            @Override
-            public void UpdateFooter(int current, int total)
-            {
-                currentPage.setText(Integer.toString(current));
-                totalPage.setText(Integer.toString(total));
-                
-            }
-        });
+//		currentPage = (TextView)this.findViewById(R.id.current_page);
+//        totalPage = (TextView)this.findViewById(R.id.total_page);
+//        prevButton = (ImageButton)this.findViewById(R.id.prev_page_button);
+//        prevButton.setOnClickListener(new View.OnClickListener()
+//        {
+//            
+//            @Override
+//            public void onClick(View v)
+//            {
+//                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_BACK, 71, 303);
+//            }
+//        });
+//        nextButton = (ImageButton)this.findViewById(R.id.next_page_button);
+//        nextButton.setOnClickListener(new View.OnClickListener()
+//        {
+//            
+//            @Override
+//            public void onClick(View v)
+//            {
+//                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD, 546, 367);
+//                
+//            }
+//        });
+//        menuButton = (ImageButton)this.findViewById(R.id.menu_button);
+//        menuButton.setOnClickListener(new View.OnClickListener()
+//        {
+//            
+//            @Override
+//            public void onClick(View v)
+//            {
+//                ZLApplication.Instance().doAction(ActionCode.SHOW_DIALOG_MENU);
+//                
+//            }
+//        });
+//        
+//		ZLApplication ZLApp = ZLApplication.Instance();
+//		ZLApp.setPageChangeListener(new PageChangeListener()
+//        {
+//            
+//            @Override
+//            public void UpdateFooter(int current, int total)
+//            {
+//                currentPage.setText(Integer.toString(current));
+//                totalPage.setText(Integer.toString(total));
+//                
+//            }
+//        });
 	}
 
 	protected abstract Runnable getPostponedInitAction();

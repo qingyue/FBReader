@@ -80,4 +80,6 @@ public interface ActionCode {
 	
 	String SHOW_DIALOG_TOC = "showdialogtoc";
 	String SHOW_DIALOG_MENU = "showdialogmenu";
+	String ADD_BOOKMARK = "addbookmark";
+	String SHOW_DIALOG_BOOKMARKS = "showdialogbookmarks";
 }

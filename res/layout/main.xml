@@ -3,73 +3,6 @@
     android:id="@+id/root_view"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
-    
-      <LinearLayout
-        android:id="@+id/footer_bar"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_alignParentBottom="true" >
-
-        <ImageButton
-            android:id="@+id/prev_page_button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@null"
-            android:contentDescription="@string/slash"
-            android:paddingLeft="30dp"
-            android:paddingRight="30dp"
-            android:src="@drawable/prev_page" />
-
-        <TextView
-            android:id="@+id/current_page"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="30dp" />
-
-        <TextView
-            android:id="@+id/slash"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/slash"
-            android:textColor="#000000"
-            android:textSize="30dp" />
-
-        <TextView
-            android:id="@+id/total_page"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="30dp" />
-
-        <ImageButton
-            android:id="@+id/next_page_button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@null"
-            android:contentDescription="@string/slash"
-            android:paddingLeft="30dp"
-            android:paddingRight="30dp"
-            android:src="@drawable/next_page" />
-
-        <ImageButton
-            android:id="@+id/menu_button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@null"
-            android:contentDescription="@string/slash"
-            android:paddingLeft="30dp"
-            android:paddingRight="30dp"
-            android:src="@drawable/ic_menu_toc" />
-    </LinearLayout>
-    
-
     <org.geometerplus.zlibrary.ui.android.view.ZLAndroidWidget
         android:id="@+id/main_view"
         android:layout_width="fill_parent"
@@ -78,7 +11,7 @@
         android:focusable="true"
         android:scrollbarAlwaysDrawVerticalTrack="true"
         android:scrollbars="vertical"
-        android:layout_above="@id/footer_bar" />
+         />
     
 
   
