@@ -209,15 +209,25 @@ public class ZLTextPlainModel implements ZLTextModel {
 		}
 	}
 
-	protected ZLTextPlainModel(String id, String language, int arraySize, int dataBlockSize, String directoryName, String extension, ZLImageMap imageMap) {
+	protected ZLTextPlainModel(
+		String id,
+		String language,
+		int[] entryIndices,
+		int[] entryOffsets,
+		int[] paragraphLenghts,
+		int[] textSizes,
+		byte[] paragraphKinds,
+		CharStorage storage,
+		ZLImageMap imageMap
+	) {
 		myId = id;
 		myLanguage = language;
-		myStartEntryIndices = new int[arraySize];
-		myStartEntryOffsets = new int[arraySize];
-		myParagraphLengths = new int[arraySize];
-		myTextSizes = new int[arraySize];
-		myParagraphKinds = new byte[arraySize];
-		myStorage = new CachedCharStorage(dataBlockSize, directoryName, extension);
+		myStartEntryIndices = entryIndices;
+		myStartEntryOffsets = entryOffsets;
+		myParagraphLengths = paragraphLenghts;
+		myTextSizes = textSizes;
+		myParagraphKinds = paragraphKinds;
+		myStorage = storage;
 		myImageMap = imageMap;
 	}
 
@@ -280,7 +290,8 @@ public class ZLTextPlainModel implements ZLTextModel {
 			endIndex = myParagraphsNumber;
 		}
 		int index = startIndex;
-		for (EntryIteratorImpl it = new EntryIteratorImpl(index); index < endIndex; it.reset(++index)) {
+		final EntryIteratorImpl it = new EntryIteratorImpl(index);
+		while (true) {
 			int offset = 0;
 			while (it.hasNext()) {
 				it.next();
@@ -296,6 +307,10 @@ public class ZLTextPlainModel implements ZLTextModel {
 					offset += textLength;
 				}
 			}
+			if (++index >= endIndex) {
+				break;
+			}
+			it.reset(index);
 		}
 		return count;
 	}

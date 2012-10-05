@@ -19,24 +19,49 @@
 
 package org.geometerplus.fbreader.library;
 
-import java.lang.ref.WeakReference;
-import java.util.*;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import org.geometerplus.zlibrary.core.util.ZLMiscUtil;
-import org.geometerplus.zlibrary.core.filesystem.*;
-import org.geometerplus.zlibrary.core.image.ZLImage;
-
-import org.geometerplus.zlibrary.text.view.ZLTextPosition;
-
-import org.geometerplus.fbreader.formats.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Formatter;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.geometerplus.fbreader.Paths;
+import org.geometerplus.fbreader.formats.FormatPlugin;
+import org.geometerplus.fbreader.formats.PluginCollection;
+import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.filesystem.ZLPhysicalFile;
+import org.geometerplus.zlibrary.core.image.ZLFileImage;
+import org.geometerplus.zlibrary.core.image.ZLImage;
+import org.geometerplus.zlibrary.core.image.ZLLoadableImage;
+import org.geometerplus.zlibrary.core.util.ZLMiscUtil;
+import org.geometerplus.zlibrary.text.view.ZLTextPosition;
+import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageData;
+import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageManager;
+import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
+
+import org.geometerplus.fbreader.formats.*;
+import org.geometerplus.fbreader.bookmodel.BookReadingException;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.DisplayMetrics;
+import android.util.Log;
+
+import com.onyx.android.sdk.data.cms.OnyxCmsCenter;
+import com.onyx.android.sdk.data.cms.OnyxMetadata;
+import com.onyx.android.sdk.data.util.FileUtil;
+import com.onyx.android.sdk.data.util.RefValue;
 
 public class Book {
+    private static final String TAG = "Book";
+    
 	public static Book getById(long bookId) {
 		final Book book = BooksDatabase.Instance().loadBook(bookId);
 		if (book == null) {
@@ -150,7 +175,12 @@ public class Book {
 		myIsSaved = false;
 
 		final FormatPlugin plugin = PluginCollection.Instance().getPlugin(File);
-		if (plugin == null || !plugin.readMetaInfo(this)) {
+		if (plugin == null) {
+			return false;
+		}
+		try {
+			plugin.readMetaInfo(this);
+		} catch (BookReadingException e) {
 			return false;
 		}
 		if (myTitle == null || myTitle.length() == 0) {
@@ -370,6 +400,115 @@ public class Book {
 				database.saveBookSeriesInfo(myId, mySeriesInfo);
 			}
 		});
+		
+		try {
+		    OnyxMetadata data = new OnyxMetadata();
+		    java.io.File file = new java.io.File(File.getPath());
+		    
+            long time_point = System.currentTimeMillis();
+            String md5 = FileUtil.computeMD5(file);
+            long time_md5 = System.currentTimeMillis() - time_point;
+            Log.d(TAG, "times md5: " + time_md5);
+
+            data.setMD5(md5);
+            data.setName(file.getName());
+            data.setLocation(file.getAbsolutePath());
+            data.setNativeAbsolutePath(file.getAbsolutePath());
+            data.setSize(file.length());
+            data.setlastModified(file.lastModified());
+            
+            Context ctx = ((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).getActivity();
+            if (OnyxCmsCenter.getMetadata(ctx, data)) {
+                data.setTitle(myTitle);
+                ArrayList<String> authors = new ArrayList<String>();
+                if (myAuthors != null) {
+                    for (Author a : myAuthors) {
+                        authors.add(a.DisplayName);
+                    }
+                }
+                data.setAuthors(authors);
+                data.setLanguage(myLanguage);
+                data.setEncoding(myEncoding);
+                ArrayList<String> tags = new ArrayList<String>();
+                if (myTags != null) {
+                    for (Tag t : myTags) {
+                        tags.add(t.Name);
+                    }
+                    data.setTags(tags);
+                }
+                
+                OnyxCmsCenter.updateMetadata(ctx, data);
+            }
+            else {
+                data.setTitle(myTitle);
+                ArrayList<String> authors = new ArrayList<String>();
+                if (myAuthors != null) {
+                    for (Author a : myAuthors) {
+                        authors.add(a.DisplayName);
+                    }
+                }
+                data.setAuthors(authors);
+                data.setLanguage(myLanguage);
+                data.setEncoding(myEncoding);
+                ArrayList<String> tags = new ArrayList<String>();
+                if (myTags != null) {
+                    for (Tag t : myTags) {
+                        tags.add(t.Name);
+                    }
+                    data.setTags(tags);
+                }
+                
+                OnyxCmsCenter.insertMetadata(ctx, data);
+            }
+            
+            Log.d(TAG, "check cover");
+            ZLImage image = this.getCover();
+            if (image != null) {
+                Log.d(TAG, "cover is not null");
+                RefValue<Bitmap> result = new RefValue<Bitmap>();
+                if (!OnyxCmsCenter.getThumbnail(ctx, data, result)) {
+                    if (image instanceof ZLLoadableImage) {
+                        final ZLLoadableImage loadableImage = (ZLLoadableImage)image;
+                        if (!loadableImage.isSynchronized()) {
+                            loadableImage.synchronize();
+                        }
+                    }
+                    
+                    final ZLAndroidImageData image_data =
+                            ((ZLAndroidImageManager)ZLAndroidImageManager.Instance()).getImageData(image);
+                    if (image_data != null) {
+                        Log.d(TAG, "image data not null, begin insert thumbnail");
+                        final DisplayMetrics metrics = new DisplayMetrics();
+                        Activity a = ((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).getActivity();
+                        a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+                        final int maxHeight = metrics.heightPixels * 2 / 3;
+                        final int maxWidth = maxHeight * 2 / 3;
+                        final Bitmap cover = image_data.getBitmap(2 * maxWidth, 2 * maxHeight);
+                        if (cover != null) {
+                            Log.d(TAG, "cover bitmap is not null"); 
+                            if (!OnyxCmsCenter.insertThumbnail(ctx, data, cover)) {
+                                Log.d(TAG, "insert thumbnail failed");
+                            }
+                            else {
+                                Log.d(TAG, "insert thumbnail successfully");
+                            }
+                        }
+                        else {
+                            Log.d(TAG, "cover bitmap is null"); 
+                        }
+                    }
+                }
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            Log.w(TAG, "exception caught: ", e);
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.w(TAG, "exception caught: ", e);
+            return false;
+        } 
 
 		myIsSaved = true;
 		return true;

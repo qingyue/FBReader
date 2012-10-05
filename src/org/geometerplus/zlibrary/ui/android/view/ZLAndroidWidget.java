@@ -19,21 +19,34 @@
 
 package org.geometerplus.zlibrary.ui.android.view;
 
-import android.content.Context;
-import android.graphics.*;
-import android.view.*;
-import android.util.AttributeSet;
-
+import org.geometerplus.fbreader.fbreader.ActionCode;
+import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
-import org.geometerplus.zlibrary.core.application.ZLApplication;
-
+import org.geometerplus.zlibrary.ui.android.R;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidActivity;
+
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.util.AttributeSet;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+
+import com.onyx.android.sdk.ui.util.ScreenUpdateManager;
+import com.onyx.android.sdk.ui.util.ScreenUpdateManager.UpdateMode;
 
 public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongClickListener {
 	private final Paint myPaint = new Paint();
 	private final BitmapManager myBitmapManager = new BitmapManager(this);
 	private Bitmap myFooterBitmap;
+	
+	private Bitmap BookmarkBitmap;
 
 	public ZLAndroidWidget(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -126,9 +139,10 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		if (animator.inProgress()) {
 			animator.draw(canvas);
 			if (animator.getMode().Auto) {
-				postInvalidate();
+				ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 			}
 			drawFooter(canvas);
+			drawBookmarkIcon(canvas);
 		} else {
 			switch (oldMode) {
 				case AnimatedScrollingForward:
@@ -166,7 +180,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		final AnimationProvider animator = getAnimationProvider();
 		if (view.canScroll(animator.getPageToScrollTo(x, y))) {
 			animator.scrollTo(x, y);
-			postInvalidate();
+			ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 		}
 	}
 
@@ -179,7 +193,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, x, y, speed);
 		if (animator.getMode().Auto) {
-			postInvalidate();
+		    ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 		}
 	}
 
@@ -192,7 +206,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, null, null, speed);
 		if (animator.getMode().Auto) {
-			postInvalidate();
+		    ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 		}
 	}
 
@@ -204,7 +218,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 			return;
 		}
 		animator.startAnimatedScrolling(x, y, speed);
-		postInvalidate();
+		ScreenUpdateManager.invalidate(this, UpdateMode.GC);
 	}
 
 	void drawOnBitmap(Bitmap bitmap, ZLView.PageIndex index) {
@@ -248,11 +262,21 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		footer.paint(context);
 		canvas.drawBitmap(myFooterBitmap, 0, getHeight() - footer.getHeight(), myPaint);
 	}
+	
+	private void drawBookmarkIcon(Canvas canvas) {
+	    Resources res = getResources();
+	    BookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
+	    Paint paint = new Paint();
+	    paint.setAlpha(100);
+	    canvas.drawBitmap(BookmarkBitmap, 678, 0, paint);
+	}
 
 	private void onDrawStatic(Canvas canvas) {
 		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
+		drawBookmarkIcon(canvas);
 		drawFooter(canvas);
+		ZLApplication.Instance().ChangePage();
 	}
 
 	@Override
@@ -323,7 +347,11 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
         					}
         					postDelayed(myPendingShortClickRunnable, ViewConfiguration.getDoubleTapTimeout());
 						} else {
-							view.onFingerSingleTap(x, y);
+						    if(x >= 678 && x < BookmarkBitmap.getWidth() + 678 && y < BookmarkBitmap.getHeight()) {
+						        ZLApplication.Instance().doAction(ActionCode.ADD_BOOKMARK);
+						    } else {
+			                    view.onFingerSingleTap(x, y);
+                            }
 						}
 					} else {
 						view.onFingerRelease(x, y);

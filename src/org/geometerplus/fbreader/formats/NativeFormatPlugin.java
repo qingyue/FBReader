@@ -20,22 +20,82 @@
 package org.geometerplus.fbreader.formats;
 
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.image.*;
+import org.geometerplus.zlibrary.core.util.MimeType;
 
 import org.geometerplus.fbreader.bookmodel.BookModel;
+import org.geometerplus.fbreader.bookmodel.BookReadingException;
 import org.geometerplus.fbreader.library.Book;
 
-public abstract class NativeFormatPlugin extends FormatPlugin {
-	@Override
-	public native boolean acceptsFile(ZLFile file);
+public class NativeFormatPlugin extends FormatPlugin {
+	private static Object ourCoversLock = new Object();
+
+	// No free method because all plugins' instances are freed by 
+	//   PluginCollection::deleteInstance method (C++)
+
+	public NativeFormatPlugin(String fileType) {
+		super(fileType);
+	}
 
 	@Override
-	public native boolean readMetaInfo(Book book);
+	public void readMetaInfo(Book book) throws BookReadingException {
+		if (!readMetaInfoNative(book)) {
+			throw new BookReadingException("errorReadingFile", book.File.getPath());
+		}
+	}
+
+	private native boolean readMetaInfoNative(Book book);
 
 	@Override
 	public native boolean readLanguageAndEncoding(Book book);
 
 	@Override
-	public native boolean readModel(BookModel model);
+	public void readModel(BookModel model) throws BookReadingException {
+		if (!readModelNative(model)) {
+			throw new BookReadingException("errorReadingFile", model.Book.File.getPath());
+		}
+	}
+
+	private native boolean readModelNative(BookModel model);
+
+	@Override
+	public ZLImage readCover(final ZLFile file) {
+		return new ZLImageProxy() {
+			@Override
+			public int sourceType() {
+				return SourceType.DISK;
+			}
+
+			@Override
+			public String getId() {
+				return file.getPath();
+			}
+
+			@Override
+			public ZLSingleImage getRealImage() {
+				// Synchronized block is needed because we use temporary storage files
+				synchronized (ourCoversLock) {
+					return (ZLSingleImage)readCoverInternal(file);
+				}
+			}
+		};
+	}
+
+	protected native ZLImage readCoverInternal(ZLFile file);
+
+	public static ZLImage createImage(String mimeType, String fileName, int offset, int length) {
+		return new ZLFileImage(MimeType.get(mimeType), ZLFile.createFileByPath(fileName), offset, length);
+	}
+
+	// FIXME: temporary implementation; implement as a native code
+	@Override
+	public String readAnnotation(ZLFile file) {
+		final FormatPlugin plugin = PluginCollection.Instance().getPlugin(file, FormatPlugin.Type.JAVA);
+		if (plugin != null) {
+			return plugin.readAnnotation(file);
+		}
+		return null;
+	}
 
 	@Override
 	public Type type() {

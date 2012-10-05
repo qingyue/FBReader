@@ -1583,4 +1583,11 @@ public abstract class ZLTextView extends ZLTextViewBase {
 			}
 		}
 	}
+	
+	public int getPageNumber(int paragraphsNumber) {
+	    
+        final float factor = 1.0f / computeCharsPerPage();
+        final float pages = paragraphsNumber * factor;
+        return Math.max((int)(pages + 1.0f - 0.5f * factor), 1);
+	}
 }

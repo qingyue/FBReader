@@ -105,10 +105,23 @@ public final class FBReader extends ZLAndroidActivity {
 	}
 
 	@Override
+	protected Runnable getPostponedInitAction() {
+		return new Runnable() {
+			public void run() {
+				runOnUiThread(new Runnable() {
+					public void run() {
+						initPluginActions();
+						new TipRunner().start();
+						DictionaryUtil.init(FBReader.this);
+					}
+				});
+			}
+		};
+	}
+
+	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-
-		DictionaryUtil.init(this);
 
 		final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
 		final ZLAndroidLibrary zlibrary = (ZLAndroidLibrary)ZLibrary.Instance();
@@ -158,6 +171,11 @@ public final class FBReader extends ZLAndroidActivity {
 			fbReader.addAction(ActionCode.SET_SCREEN_ORIENTATION_REVERSE_PORTRAIT, new SetScreenOrientationAction(this, fbReader, ZLibrary.SCREEN_ORIENTATION_REVERSE_PORTRAIT));
 			fbReader.addAction(ActionCode.SET_SCREEN_ORIENTATION_REVERSE_LANDSCAPE, new SetScreenOrientationAction(this, fbReader, ZLibrary.SCREEN_ORIENTATION_REVERSE_LANDSCAPE));
 		}
+		
+		fbReader.addAction(ActionCode.SHOW_DIALOG_TOC, new ShowDialogTOCAction(this, fbReader));
+		fbReader.addAction(ActionCode.SHOW_DIALOG_MENU, new ShowDialogMenuAction(this, fbReader));
+		fbReader.addAction(ActionCode.ADD_BOOKMARK, new AddBookmarkAction(this, fbReader));
+		fbReader.addAction(ActionCode.SHOW_DIALOG_BOOKMARKS, new ShowDialogBookmarksAction(this, fbReader));
 	}
 
  	@Override
@@ -245,7 +263,10 @@ public final class FBReader extends ZLAndroidActivity {
 		((PopupPanel)fbReader.getPopupById(TextSearchPopup.ID)).setPanelInfo(this, root);
 		((PopupPanel)fbReader.getPopupById(NavigationPopup.ID)).setPanelInfo(this, root);
 		((PopupPanel)fbReader.getPopupById(SelectionPopup.ID)).setPanelInfo(this, root);
+	}
 
+	private void initPluginActions() {
+		final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
 		synchronized (myPluginActions) {
 			int index = 0;
 			while (index < myPluginActions.size()) {
@@ -263,8 +284,6 @@ public final class FBReader extends ZLAndroidActivity {
 			null,
 			null
 		);
-
-		new TipRunner().start();
 	}
 
 	private class TipRunner extends Thread {
@@ -419,7 +438,11 @@ public final class FBReader extends ZLAndroidActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
+		addMenuItem(menu, ActionCode.INCREASE_FONT);
+        addMenuItem(menu, ActionCode.DECREASE_FONT);
 		addMenuItem(menu, ActionCode.SHOW_LIBRARY, R.drawable.ic_menu_library);
+		addMenuItem(menu, ActionCode.INCREASE_LINESPACING);
+		addMenuItem(menu, ActionCode.DECREASE_LINESPACING);
 		addMenuItem(menu, ActionCode.SHOW_NETWORK_LIBRARY, R.drawable.ic_menu_networklibrary);
 		addMenuItem(menu, ActionCode.SHOW_TOC, R.drawable.ic_menu_toc);
 		addMenuItem(menu, ActionCode.SHOW_BOOKMARKS, R.drawable.ic_menu_bookmarks);
@@ -437,8 +460,6 @@ public final class FBReader extends ZLAndroidActivity {
 			addMenuItem(subMenu, ActionCode.SET_SCREEN_ORIENTATION_REVERSE_PORTRAIT);
 			addMenuItem(subMenu, ActionCode.SET_SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 		}
-		addMenuItem(menu, ActionCode.INCREASE_FONT);
-		addMenuItem(menu, ActionCode.DECREASE_FONT);
 		addMenuItem(menu, ActionCode.SHOW_NAVIGATION);
 		synchronized (myPluginActions) {
 			int index = 0;
@@ -457,5 +478,15 @@ public final class FBReader extends ZLAndroidActivity {
 		application.myMainWindow.refresh();
 
 		return true;
+	}
+	
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus)
+	{
+	    if(hasFocus) {
+	        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+	    } else {
+	        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        }
 	}
 }

@@ -38,7 +38,7 @@ public class ScrollingPreferences {
 		new ZLEnumOption<FingerScrolling>("Scrolling", "Finger", FingerScrolling.byTapAndFlick);
 
 	public final ZLEnumOption<ZLView.Animation> AnimationOption =
-		new ZLEnumOption<ZLView.Animation>("Scrolling", "Animation", ZLView.Animation.slide);
+		new ZLEnumOption<ZLView.Animation>("Scrolling", "Animation", ZLView.Animation.none);
 	public final ZLIntegerRangeOption AnimationSpeedOption =
 		new ZLIntegerRangeOption("Scrolling", "AnimationSpeed", 1, 10, 4);
 

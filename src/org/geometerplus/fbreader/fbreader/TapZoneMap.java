@@ -25,6 +25,7 @@ import org.geometerplus.zlibrary.core.xml.ZLXMLReaderAdapter;
 import org.geometerplus.zlibrary.core.xml.ZLStringMap;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 
+
 public class TapZoneMap {
 	public static enum Tap {
 		singleTap,
@@ -38,7 +39,7 @@ public class TapZoneMap {
 	private final HashMap<Zone,String> myZoneMap2 = new HashMap<Zone,String>();
 
 	TapZoneMap(int v, int h) {
-		myVerticalSize = v;
+		myVerticalSize = 1;
 		myHorizontalSize = h;
 	}
 
@@ -46,7 +47,7 @@ public class TapZoneMap {
 		final ZLFile mapFile = ZLFile.createFileByPath(
 			"default/tapzones/" + name.toLowerCase() + ".xml"
 		);
-		new Reader().read(mapFile);
+		new Reader().readQuietly(mapFile);
 	}
 
 	public String getActionByCoordinates(int x, int y, int width, int height, Tap tap) {
@@ -58,12 +59,16 @@ public class TapZoneMap {
 			case singleTap:
 			{
 				final String action = myZoneMap.get(zone);
-				return action != null ? action : myZoneMap2.get(zone);
+				return action != null ? action : "showdialogmenu";
 			}
 			case singleNotDoubleTap:
-				return myZoneMap.get(zone);
+			{
+			    return myZoneMap.get(zone);
+			}
 			case doubleTap:
-				return myZoneMap2.get(zone);
+			{
+			    return myZoneMap2.get(zone);
+			}
 		}
 		return null;
 	}
@@ -111,7 +116,7 @@ public class TapZoneMap {
 					final int x = Integer.parseInt(attributes.getValue("x"));
 					final int y = Integer.parseInt(attributes.getValue("y"));
 					final String action = attributes.getValue("action");
-					final String action2 = attributes.getValue("action2");
+					final String action2 = attributes.getValue("action");
 					if (action != null) {
 						myZoneMap.put(new Zone(x, y), action);
 					}
