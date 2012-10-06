@@ -1,12 +1,30 @@
+<<<<<<< HEAD
 default.properties
 build.properties
 local.properties
 bin/
 gen/
-res/drawable/
 res/raw/
 obj/
 .classpath
 .settings
 *.so
 *~
+=======
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# Local configuration file (sdk path, etc)
+local.properties
+>>>>>>> f92319c20723527197fc04a3f3c66b24076b6239
