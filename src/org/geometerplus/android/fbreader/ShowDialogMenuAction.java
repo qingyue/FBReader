@@ -20,6 +20,9 @@ import android.widget.LinearLayout;
 
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings;
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings.onSettingsFontFaceListener;
+import com.onyx.android.sdk.ui.dialog.DialogGotoPage;
+import com.onyx.android.sdk.ui.dialog.DialogGotoPage.AcceptNumberListener;
+import com.onyx.android.sdk.ui.dialog.DialogGotoPage.onDismissMenuDialogListener;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.FontSizeProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.LineSpacingProperty;
@@ -232,6 +235,41 @@ public class ShowDialogMenuAction extends FBAndroidAction
             {
                 // TODO Auto-generated method stub
                 
+            }
+
+            @Override
+            public void showGoToPageDialog()
+            {
+                final DialogGotoPage dialogGotoPage = new DialogGotoPage(BaseActivity);
+                dialogGotoPage.setAcceptNumberListener(new AcceptNumberListener()
+                {
+
+                    @Override
+                    public void onAcceptNumber(int num)
+                    {
+                        final ZLTextView view = (ZLTextView) ZLApplication.Instance().getCurrentView();
+                        if (num == 1) {
+                            view.gotoHome();
+                        } else {
+                            view.gotoPage(num);
+                        }
+                        ZLApplication.Instance().getCurrentView().Application.getViewWidget().reset();
+                        ZLApplication.Instance().getCurrentView().Application.getViewWidget().repaint();
+
+                        dialogGotoPage.dismiss();
+                        mDialogReaderMenu.dismiss();
+                    }
+                });
+                dialogGotoPage.setOnDismissMenuDialogListener(new onDismissMenuDialogListener()
+                {
+
+                    @Override
+                    public void dismissMenudialog()
+                    {
+                        mDialogReaderMenu.dismiss();
+                    }
+                });
+                dialogGotoPage.show();
             }
         };
         
