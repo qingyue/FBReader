@@ -93,6 +93,11 @@ public final class ZLKeyBindings {
 	public ZLStringOption getOption(int key, boolean longPress) {
 		final TreeMap<Integer,ZLStringOption> map = longPress ? myLongPressActionMap : myActionMap;
 		ZLStringOption option = map.get(key);
+
+		//qingyue add
+		if (KeyEvent.KEYCODE_BACK == key) {
+		    return option = createOption(key, longPress, ActionCode.EXIT);
+		}
 		if (option == null) {
 			option = createOption(key, longPress, ZLApplication.NoAction);
 			map.put(key, option);
