@@ -25,8 +25,8 @@ import android.os.Environment;
 
 public abstract class Paths {
 	public static String cardDirectory() {
-//		return Environment.getExternalStorageDirectory().getPath();
-	    return "/mnt/flash";
+		return Environment.getExternalStorageDirectory().getPath();
+//	    return "/mnt/flash";
 	}
 
 	public static ZLStringOption BooksDirectoryOption() {
