@@ -16,6 +16,7 @@ import org.geometerplus.zlibrary.text.view.style.ZLTextBaseStyle;
 import org.geometerplus.zlibrary.text.view.style.ZLTextStyleCollection;
 import org.geometerplus.zlibrary.ui.android.view.AndroidFontUtil;
 
+import android.content.pm.ActivityInfo;
 import android.widget.LinearLayout;
 
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings;
@@ -226,8 +227,22 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void changeRotationScreen(RotationScreenProperty property)
             {
-                // TODO Auto-generated method stub
-                
+                if (property == RotationScreenProperty.rotation_0) {
+                    mDialogReaderMenu.dismiss();
+                    BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                }
+                else if (property == RotationScreenProperty.rotation_90) {
+                    mDialogReaderMenu.dismiss();
+                    BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+                }
+                else if (property == RotationScreenProperty.rotation_180) {
+                    mDialogReaderMenu.dismiss();
+                    BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+                }
+                else if (property == RotationScreenProperty.rotation_270) {
+                    mDialogReaderMenu.dismiss();
+                    BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                }
             }
             
             @Override
