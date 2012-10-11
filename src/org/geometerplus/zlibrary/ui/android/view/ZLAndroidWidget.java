@@ -20,6 +20,8 @@
 package org.geometerplus.zlibrary.ui.android.view;
 
 import org.geometerplus.fbreader.fbreader.ActionCode;
+import org.geometerplus.fbreader.fbreader.FBReaderApp;
+import org.geometerplus.fbreader.library.Bookmark;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
@@ -46,7 +48,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	private final BitmapManager myBitmapManager = new BitmapManager(this);
 	private Bitmap myFooterBitmap;
 	
-	private Bitmap BookmarkBitmap;
+	private Bitmap mBookmarkBitmap;
 
 	public ZLAndroidWidget(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -262,13 +264,27 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		footer.paint(context);
 		canvas.drawBitmap(myFooterBitmap, 0, getHeight() - footer.getHeight(), myPaint);
 	}
-	
+
+	private final int mBookmarkY = 10;
+	private int mBookmarkX = 0;
+	private final int mMargins = 10;
 	private void drawBookmarkIcon(Canvas canvas) {
 	    Resources res = getResources();
-	    BookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
+	    final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
+	    final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
+	    mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star_cancel);
+	    mBookmarkX = ZLAndroidWidget.this.getWidth() - mBookmarkBitmap.getWidth() - mMargins;
+	    if (bookmarkAdd != null) {
+	        for (Bookmark bookmark : Bookmark.bookmarks()) {
+	            if (bookmark.getText().equals(bookmarkAdd.getText())) {
+	                mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
+	                break;
+	            }
+	        }
+	    }
 	    Paint paint = new Paint();
 	    paint.setAlpha(100);
-	    canvas.drawBitmap(BookmarkBitmap, 678, 0, paint);
+	    canvas.drawBitmap(mBookmarkBitmap, mBookmarkX, mBookmarkY, paint);
 	}
 
 	private void onDrawStatic(Canvas canvas) {
@@ -347,8 +363,20 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
         					}
         					postDelayed(myPendingShortClickRunnable, ViewConfiguration.getDoubleTapTimeout());
 						} else {
-						    if(x >= 678 && x < BookmarkBitmap.getWidth() + 678 && y < BookmarkBitmap.getHeight()) {
+						    if(x >= mBookmarkX && x <= mBookmarkX + mBookmarkBitmap.getWidth() && y >= mBookmarkY && y <= mBookmarkY + mBookmarkBitmap.getHeight()) {
+						        final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
+						        final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
+						        if (bookmarkAdd != null) {
+						            for (Bookmark bookmark : Bookmark.bookmarks()) {
+						                if (bookmark.getText().equals(bookmarkAdd.getText())) {
+						                    bookmark.delete();
+						                    ZLAndroidWidget.this.invalidate();
+						                    return true;
+						                }
+						            }
+						        }
 						        ZLApplication.Instance().doAction(ActionCode.ADD_BOOKMARK);
+						        ZLAndroidWidget.this.invalidate();
 						    } else {
 			                    view.onFingerSingleTap(x, y);
                             }
