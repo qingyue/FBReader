@@ -30,7 +30,6 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-<<<<<<< HEAD
 	<linkedResources>
 		<link>
 			<name>OnyxSDK</name>
@@ -38,6 +37,4 @@
 			<location>/home/qingyue/src/onyx-intl/android/sandbox/OnyxSDK/src</location>
 		</link>
 	</linkedResources>
-=======
->>>>>>> dxw_repo/onyx_tailor
 </projectDescription>
