@@ -139,7 +139,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		if (animator.inProgress()) {
 			animator.draw(canvas);
 			if (animator.getMode().Auto) {
-				EpdController.invalidate(this, UpdateMode.GC);
+				EpdController.invalidate(this, UpdateMode.GU);
 			}
 			drawFooter(canvas);
 			drawBookmarkIcon(canvas);
@@ -180,7 +180,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		final AnimationProvider animator = getAnimationProvider();
 		if (view.canScroll(animator.getPageToScrollTo(x, y))) {
 			animator.scrollTo(x, y);
-			EpdController.invalidate(this, UpdateMode.GC);
+			EpdController.invalidate(this, UpdateMode.GU);
 		}
 	}
 
@@ -193,7 +193,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, x, y, speed);
 		if (animator.getMode().Auto) {
-		    EpdController.invalidate(this, UpdateMode.GC);
+		    EpdController.invalidate(this, UpdateMode.GU);
 		}
 	}
 
@@ -206,7 +206,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, null, null, speed);
 		if (animator.getMode().Auto) {
-		    EpdController.invalidate(this, UpdateMode.GC);
+		    EpdController.invalidate(this, UpdateMode.GU);
 		}
 	}
 
@@ -218,7 +218,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 			return;
 		}
 		animator.startAnimatedScrolling(x, y, speed);
-		EpdController.invalidate(this, UpdateMode.GC);
+		EpdController.invalidate(this, UpdateMode.GU);
 	}
 
 	void drawOnBitmap(Bitmap bitmap, ZLView.PageIndex index) {
