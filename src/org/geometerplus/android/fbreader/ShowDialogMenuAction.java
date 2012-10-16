@@ -4,12 +4,19 @@
 package org.geometerplus.android.fbreader;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import org.geometerplus.android.util.UIUtil;
+import org.geometerplus.fbreader.bookmodel.TOCTree;
 import org.geometerplus.fbreader.fbreader.ActionCode;
 import org.geometerplus.fbreader.fbreader.FBReaderApp;
 import org.geometerplus.fbreader.fbreader.FBView;
+import org.geometerplus.fbreader.library.Book;
+import org.geometerplus.fbreader.library.Bookmark;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.options.ZLIntegerRangeOption;
+import org.geometerplus.zlibrary.text.model.ZLTextModel;
 import org.geometerplus.zlibrary.text.view.ZLTextView;
 import org.geometerplus.zlibrary.text.view.ZLTextView.PagePosition;
 import org.geometerplus.zlibrary.text.view.style.ZLTextBaseStyle;
@@ -19,6 +26,8 @@ import org.geometerplus.zlibrary.ui.android.view.AndroidFontUtil;
 import android.content.pm.ActivityInfo;
 import android.widget.LinearLayout;
 
+import com.onyx.android.sdk.ui.data.DirectoryItem;
+import com.onyx.android.sdk.ui.dialog.DialogDirectory;
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings;
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings.onSettingsFontFaceListener;
 import com.onyx.android.sdk.ui.dialog.DialogGotoPage;
@@ -74,7 +83,75 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void showTOC()
             {
-                ZLApplication.Instance().doAction(ActionCode.SHOW_DIALOG_TOC);
+                final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
+                ArrayList<DirectoryItem> bookmarks = new ArrayList<DirectoryItem>();
+                List<Bookmark>allBooksBookmarks = Bookmark.bookmarks();
+                Collections.sort(allBooksBookmarks, new Bookmark.ByTimeComparator());
+
+                if (fbreader.Model != null) {
+                    final long bookId = fbreader.Model.Book.getId();
+                    for (Bookmark bookmark : allBooksBookmarks) {
+                        if (bookmark.getBookId() == bookId) {
+                            DirectoryItem item = new DirectoryItem(bookmark.getText(),0,  bookmark);
+                            bookmarks.add(item);
+                        }
+                    }
+                }
+
+                final TOCTree tocTree = fbreader.Model.TOCTree;
+                ArrayList<DirectoryItem> TOCItems = new ArrayList<DirectoryItem>();
+                if(tocTree.hasChildren()) {
+                    for (TOCTree t : tocTree) {
+                        if(t.getText() != null){
+                            ZLTextView zlt = (ZLTextView)ZLApplication.Instance().getCurrentView();
+                            ZLTextModel zltModel = zlt.getModel();
+                            int textLength = zltModel.getTextLength(t.getReference().ParagraphIndex);
+                            DirectoryItem item = new DirectoryItem(t.getText(), zlt.getPageNumber(textLength) + 1, t.getReference().ParagraphIndex);
+                            TOCItems.add(item);
+                        }
+                    }
+                }
+
+                DialogDirectory.IGotoPageHandler gotoPageHandler = new DialogDirectory.IGotoPageHandler()
+                {
+
+                    @Override
+                    public void jumpTOC(DirectoryItem item)
+                    {
+                        fbreader.addInvisibleBookmark();
+                        fbreader.BookTextView.gotoPosition(Integer.parseInt(item.getTag().toString()), 0, 0);
+                        fbreader.showBookTextView();
+                    }
+
+                    @Override
+                    public void jumpBookmark(DirectoryItem item)
+                    {
+                        Bookmark bookmark = (Bookmark) item.getTag();
+                        bookmark.onOpen();
+                        final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
+                        final long bookId = bookmark.getBookId();
+                        if ((fbreader.Model == null) || (fbreader.Model.Book.getId() != bookId)) {
+                            final Book book = Book.getById(bookId);
+                            if (book != null) {
+                                fbreader.openBook(book, bookmark, null);
+                            } else {
+                                UIUtil.showErrorMessage(mDialogReaderMenu.getContext(), "cannotOpenBook");
+                            }
+                        } else {
+                            fbreader.gotoBookmark(bookmark);
+                        }
+                    }
+
+                    @Override
+                    public void jumpAnnotation(DirectoryItem item)
+                    {
+                        // TODO Auto-generated method stub
+
+                    }
+                };
+
+                DialogDirectory dialogDirectory = new DialogDirectory(BaseActivity, TOCItems, bookmarks, null, gotoPageHandler);
+                dialogDirectory.show();
             }
             
             @Override
