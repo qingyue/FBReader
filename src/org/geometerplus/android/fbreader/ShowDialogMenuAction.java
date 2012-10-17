@@ -92,7 +92,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
                     final long bookId = fbreader.Model.Book.getId();
                     for (Bookmark bookmark : allBooksBookmarks) {
                         if (bookmark.getBookId() == bookId) {
-                            DirectoryItem item = new DirectoryItem(bookmark.getText(),0,  bookmark);
+                            DirectoryItem item = new DirectoryItem(bookmark.getText(),bookmark.getBookmarkPage(),  bookmark);
                             bookmarks.add(item);
                         }
                     }

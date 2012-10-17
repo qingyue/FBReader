@@ -55,13 +55,14 @@ public final class Bookmark extends ZLTextFixedPosition {
 	private Date myAccessDate;
 	private int myAccessCount;
 	private Date myLatestDate;
+	private int mBookmarkPage;
 
 	public final String ModelId;
 	public final boolean IsVisible;
 
 	private boolean myIsChanged;
 
-	Bookmark(long id, long bookId, String bookTitle, String text, Date creationDate, Date modificationDate, Date accessDate, int accessCount, String modelId, int paragraphIndex, int elementIndex, int charIndex, boolean isVisible) {
+	Bookmark(long id, long bookId, String bookTitle, String text, Date creationDate, Date modificationDate, Date accessDate, int accessCount, String modelId, int paragraphIndex, int elementIndex, int charIndex, boolean isVisible, int page) {
 		super(paragraphIndex, elementIndex, charIndex);
 
 		myId = id;
@@ -81,13 +82,14 @@ public final class Bookmark extends ZLTextFixedPosition {
 		ModelId = modelId;
 		IsVisible = isVisible;
 		myIsChanged = false;
+		mBookmarkPage = page;
 	}
 
-	public Bookmark(Book book, String modelId, ZLTextWordCursor cursor, int maxLength, boolean isVisible) {
-		this(book, modelId, cursor, createBookmarkText(cursor, maxLength), isVisible);
+	public Bookmark(Book book, String modelId, ZLTextWordCursor cursor, int maxLength, boolean isVisible, int page) {
+		this(book, modelId, cursor, createBookmarkText(cursor, maxLength), isVisible, page);
 	}
 
-	public Bookmark(Book book, String modelId, ZLTextPosition position, String text, boolean isVisible) {
+	public Bookmark(Book book, String modelId, ZLTextPosition position, String text, boolean isVisible, int page) {
 		super(position);
 
 		myId = -1;
@@ -98,6 +100,7 @@ public final class Bookmark extends ZLTextFixedPosition {
 		ModelId = modelId;
 		IsVisible = isVisible;
 		myIsChanged = true;
+		mBookmarkPage = page;
 	}
 
 	public long getId() {
@@ -132,6 +135,11 @@ public final class Bookmark extends ZLTextFixedPosition {
 
 	public int getAccessCount() {
 		return myAccessCount;
+	}
+
+	public int getBookmarkPage()
+	{
+	    return mBookmarkPage;
 	}
 
 	public void setText(String text) {

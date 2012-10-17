@@ -19,25 +19,36 @@
 
 package org.geometerplus.android.fbreader.library;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import org.geometerplus.android.util.SQLiteUtil;
+import org.geometerplus.android.util.UIUtil;
+import org.geometerplus.fbreader.library.Author;
+import org.geometerplus.fbreader.library.Book;
+import org.geometerplus.fbreader.library.Bookmark;
+import org.geometerplus.fbreader.library.BooksDatabase;
+import org.geometerplus.fbreader.library.FileInfo;
+import org.geometerplus.fbreader.library.FileInfoSet;
+import org.geometerplus.fbreader.library.SeriesInfo;
+import org.geometerplus.fbreader.library.Tag;
+import org.geometerplus.zlibrary.core.config.ZLConfig;
+import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.options.ZLIntegerOption;
+import org.geometerplus.zlibrary.core.options.ZLStringOption;
+import org.geometerplus.zlibrary.text.view.ZLTextFixedPosition;
+import org.geometerplus.zlibrary.text.view.ZLTextPosition;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import android.database.SQLException;
-import android.database.Cursor;
-
-import org.geometerplus.zlibrary.core.filesystem.ZLFile;
-import org.geometerplus.zlibrary.core.options.ZLStringOption;
-import org.geometerplus.zlibrary.core.options.ZLIntegerOption;
-import org.geometerplus.zlibrary.core.config.ZLConfig;
-import org.geometerplus.zlibrary.text.view.ZLTextPosition;
-import org.geometerplus.zlibrary.text.view.ZLTextFixedPosition;
-
-import org.geometerplus.fbreader.library.*;
-
-import org.geometerplus.android.util.UIUtil;
-import org.geometerplus.android.util.SQLiteUtil;
 
 public final class SQLiteBooksDatabase extends BooksDatabase {
 	private final String myInstanceId;
@@ -718,7 +729,11 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 	protected List<Bookmark> loadBookmarks(long bookId, boolean visible) {
 		LinkedList<Bookmark> list = new LinkedList<Bookmark>();
 		Cursor cursor = myDatabase.rawQuery(
-			"SELECT Bookmarks.bookmark_id,Bookmarks.book_id,Books.title,Bookmarks.bookmark_text,Bookmarks.creation_time,Bookmarks.modification_time,Bookmarks.access_time,Bookmarks.access_counter,Bookmarks.model_id,Bookmarks.paragraph,Bookmarks.word,Bookmarks.char FROM Bookmarks INNER JOIN Books ON Books.book_id = Bookmarks.book_id WHERE Bookmarks.book_id = ? AND Bookmarks.visible = ?", new String[] { "" + bookId, visible ? "1" : "0" }
+			"SELECT Bookmarks.bookmark_id,Bookmarks.book_id,Books.title,Bookmarks.bookmark_text," +
+			"Bookmarks.creation_time,Bookmarks.modification_time,Bookmarks.access_time,Bookmarks.access_counter," +
+			"Bookmarks.model_id,Bookmarks.paragraph,Bookmarks.word,Bookmarks.char, Bookmarks.page " +
+			"FROM Bookmarks INNER JOIN Books ON Books.book_id = Bookmarks.book_id WHERE Bookmarks.book_id = ? " +
+			"AND Bookmarks.visible = ?", new String[] { "" + bookId, visible ? "1" : "0" }
 		);
 		while (cursor.moveToNext()) {
 			list.add(createBookmark(
@@ -734,7 +749,8 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 				(int)cursor.getLong(9),
 				(int)cursor.getLong(10),
 				(int)cursor.getLong(11),
-				visible
+				visible,
+				(int)cursor.getLong(12)
 			));
 		}
 		cursor.close();
@@ -746,8 +762,10 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 		LinkedList<Bookmark> list = new LinkedList<Bookmark>();
 		myDatabase.execSQL("DELETE FROM Bookmarks WHERE book_id = -1");
 		Cursor cursor = myDatabase.rawQuery(
-			"SELECT Bookmarks.bookmark_id,Bookmarks.book_id,Books.title,Bookmarks.bookmark_text,Bookmarks.creation_time,Bookmarks.modification_time,Bookmarks.access_time,Bookmarks.access_counter,Bookmarks.model_id,Bookmarks.paragraph,Bookmarks.word,Bookmarks.char FROM Bookmarks INNER JOIN Books ON Books.book_id = Bookmarks.book_id WHERE Bookmarks.visible = 1", null
-		);
+			"SELECT Bookmarks.bookmark_id,Bookmarks.book_id,Books.title,Bookmarks.bookmark_text,Bookmarks.creation_time," +
+			"Bookmarks.modification_time,Bookmarks.access_time,Bookmarks.access_counter,Bookmarks.model_id," +
+			"Bookmarks.paragraph,Bookmarks.word,Bookmarks.char,Bookmarks.page FROM Bookmarks INNER JOIN Books " +
+			"ON Books.book_id = Bookmarks.book_id WHERE Bookmarks.visible = 1", null);
 		while (cursor.moveToNext()) {
 			list.add(createBookmark(
 				cursor.getLong(0),
@@ -762,7 +780,8 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 				(int)cursor.getLong(9),
 				(int)cursor.getLong(10),
 				(int)cursor.getLong(11),
-				true
+				true,
+				(int)cursor.getLong(12)
 			));
 		}
 		cursor.close();
@@ -777,15 +796,17 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 		if (bookmark.getId() == -1) {
 			if (myInsertBookmarkStatement == null) {
 				myInsertBookmarkStatement = myDatabase.compileStatement(
-					"INSERT OR IGNORE INTO Bookmarks (book_id,bookmark_text,creation_time,modification_time,access_time,access_counter,model_id,paragraph,word,char,visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+					"INSERT OR IGNORE INTO Bookmarks (book_id,bookmark_text,creation_time,modification_time," +
+					"access_time,access_counter,model_id,paragraph,word,char,visible, page) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
 				);
 			}
 			statement = myInsertBookmarkStatement;
 		} else {
 			if (myUpdateBookmarkStatement == null) {
 				myUpdateBookmarkStatement = myDatabase.compileStatement(
-					"UPDATE Bookmarks SET book_id = ?, bookmark_text = ?, creation_time =?, modification_time = ?,access_time = ?, access_counter = ?, model_id = ?, paragraph = ?, word = ?, char = ?, visible = ? WHERE bookmark_id = ?"
-				);
+					"UPDATE Bookmarks SET book_id = ?, bookmark_text = ?, creation_time =?, modification_time = ?," +
+					"access_time = ?, access_counter = ?, model_id = ?, paragraph = ?, word = ?, char = ?," +
+					" visible = ?, page = ? WHERE bookmark_id = ?");
 			}
 			statement = myUpdateBookmarkStatement;
 		}
@@ -801,6 +822,7 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 		statement.bindLong(9, bookmark.ElementIndex);
 		statement.bindLong(10, bookmark.CharIndex);
 		statement.bindLong(11, bookmark.IsVisible ? 1 : 0);
+		statement.bindLong(12, bookmark.getBookmarkPage());
 
 		if (statement == myInsertBookmarkStatement) {
 			return statement.executeInsert();
@@ -1055,7 +1077,8 @@ public final class SQLiteBooksDatabase extends BooksDatabase {
 				"access_counter INTEGER NOT NULL," +
 				"paragraph INTEGER NOT NULL," +
 				"word INTEGER NOT NULL," +
-				"char INTEGER NOT NULL)");
+				"char INTEGER NOT NULL," +
+				"page INTEGER)");
 
 		myDatabase.execSQL(
 			"CREATE TABLE BookState(" +
