@@ -33,7 +33,6 @@ import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings;
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings.onSettingsFontFaceListener;
 import com.onyx.android.sdk.ui.dialog.DialogGotoPage;
 import com.onyx.android.sdk.ui.dialog.DialogGotoPage.AcceptNumberListener;
-import com.onyx.android.sdk.ui.dialog.DialogGotoPage.onDismissMenuDialogListener;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.FontSizeProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.LineSpacingProperty;
@@ -142,7 +141,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
                 for (int i = 0; i < mFonts.size(); i++) {
                     fontfoces[i] = mFonts.get(i);
                 }
-                DialogFontFaceSettings dlg = new DialogFontFaceSettings(BaseActivity, fontfoces, optionValue);
+                DialogFontFaceSettings dlg = new DialogFontFaceSettings(BaseActivity, fontfoces, optionValue, mDialogReaderMenu);
                 dlg.show();
                 dlg.setOnSettingsFontFaceListener(new onSettingsFontFaceListener()
                 {
@@ -265,7 +264,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void showGoToPageDialog()
             {
-                final DialogGotoPage dialogGotoPage = new DialogGotoPage(BaseActivity);
+                final DialogGotoPage dialogGotoPage = new DialogGotoPage(BaseActivity, mDialogReaderMenu);
                 dialogGotoPage.setAcceptNumberListener(new AcceptNumberListener()
                 {
 
@@ -282,15 +281,6 @@ public class ShowDialogMenuAction extends FBAndroidAction
                         ZLApplication.Instance().getCurrentView().Application.getViewWidget().repaint();
 
                         dialogGotoPage.dismiss();
-                        mDialogReaderMenu.dismiss();
-                    }
-                });
-                dialogGotoPage.setOnDismissMenuDialogListener(new onDismissMenuDialogListener()
-                {
-
-                    @Override
-                    public void dismissMenudialog()
-                    {
                         mDialogReaderMenu.dismiss();
                     }
                 });
