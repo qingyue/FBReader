@@ -31,6 +31,8 @@ import android.widget.Toast;
 
 import org.geometerplus.zlibrary.core.resources.ZLResource;
 
+import com.onyx.android.sdk.ui.dialog.DialogLoading;
+
 public abstract class UIUtil {
 	private static final Object ourMonitor = new Object();
 	private static ProgressDialog ourProgress;
@@ -109,35 +111,38 @@ public abstract class UIUtil {
 	}
 
 	public static void runWithMessage(final Activity activity, String key, final Runnable action, final Runnable postAction, final boolean minPriority) {
-		final String message =
-			ZLResource.resource("dialog").getResource("waitMessage").getResource(key).getValue();
-		activity.runOnUiThread(new Runnable() {
-			public void run() {
-				final ProgressDialog progress = ProgressDialog.show(activity, null, message, true, false);
-            
-				final Thread runner = new Thread() {
-					public void run() {
-						action.run();
-						activity.runOnUiThread(new Runnable() {
-							public void run() {
-								try {
-									progress.dismiss();
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-								if (postAction != null) {
-									postAction.run();
-								}
-							}
-						});
-					}
-				};
-				if (minPriority) {
-					runner.setPriority(Thread.MIN_PRIORITY);
-				}
-				runner.start();
-			}
-		});
+	    final String message =
+	            ZLResource.resource("dialog").getResource("waitMessage").getResource(key).getValue();
+	    activity.runOnUiThread(new Runnable() {
+	        public void run() {
+//				final ProgressDialog progress = ProgressDialog.show(activity, null, message, true, false);
+	            final DialogLoading dialogLoading = new DialogLoading(activity, message);
+	            dialogLoading.show();
+
+	            final Thread runner = new Thread() {
+	                public void run() {
+	                    action.run();
+	                    activity.runOnUiThread(new Runnable() {
+	                        public void run() {
+	                            try {
+	                                dialogLoading.dismiss();
+//									progress.dismiss();
+	                            } catch (Exception e) {
+	                                e.printStackTrace();
+	                            }
+	                            if (postAction != null) {
+	                                postAction.run();
+	                            }
+	                        }
+	                    });
+	                }
+	            };
+	            if (minPriority) {
+	                runner.setPriority(Thread.MIN_PRIORITY);
+	            }
+	            runner.start();
+	        }
+	    });
 	}
 
 	public static void showMessageText(Context context, String text) {
