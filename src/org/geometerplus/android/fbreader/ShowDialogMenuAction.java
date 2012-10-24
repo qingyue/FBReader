@@ -260,6 +260,13 @@ public class ShowDialogMenuAction extends FBAndroidAction
                 // TODO Auto-generated method stub
                 
             }
+            
+            @Override
+            public void toggleFontEmbolden()
+            {
+                // TODO Auto-generated method stub
+                
+            }
 
             @Override
             public void showGoToPageDialog()
