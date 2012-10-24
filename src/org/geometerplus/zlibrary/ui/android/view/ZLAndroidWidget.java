@@ -271,20 +271,22 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	private void drawBookmarkIcon(Canvas canvas) {
 	    Resources res = getResources();
 	    final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
-	    final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
-	    mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star_cancel);
-	    mBookmarkX = ZLAndroidWidget.this.getWidth() - mBookmarkBitmap.getWidth() - mMargins;
-	    if (bookmarkAdd != null) {
-	        for (Bookmark bookmark : Bookmark.bookmarks()) {
-	            if (bookmark.getText().equals(bookmarkAdd.getText())) {
-	                mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
-	                break;
+	    if (fbreader != null && fbreader.Model != null) {
+	        final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
+	        mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star_cancel);
+	        mBookmarkX = ZLAndroidWidget.this.getWidth() - mBookmarkBitmap.getWidth() - mMargins;
+	        if (bookmarkAdd != null) {
+	            for (Bookmark bookmark : Bookmark.bookmarks()) {
+	                if (bookmark.getText().equals(bookmarkAdd.getText())) {
+	                    mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
+	                    break;
+	                }
 	            }
 	        }
+	        Paint paint = new Paint();
+	        paint.setAlpha(100);
+	        canvas.drawBitmap(mBookmarkBitmap, mBookmarkX, mBookmarkY, paint);
 	    }
-	    Paint paint = new Paint();
-	    paint.setAlpha(100);
-	    canvas.drawBitmap(mBookmarkBitmap, mBookmarkX, mBookmarkY, paint);
 	}
 
 	private void onDrawStatic(Canvas canvas) {

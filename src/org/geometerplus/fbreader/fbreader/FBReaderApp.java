@@ -169,6 +169,7 @@ public final class FBReaderApp extends ZLApplication {
 				return;
 			}
 		}
+
 		final Book bookToOpen = book;
 		runWithMessage("loadingBook", new Runnable() {
 			public void run() {
@@ -528,5 +529,15 @@ public final class FBReaderApp extends ZLApplication {
 			treeToSelect = tree;
 		}
 		return treeToSelect;
+	}
+
+	public FBView getBookTextView()
+	{
+	    return BookTextView;
+	}
+
+	public FBView getfootnoteView()
+	{
+	    return FootnoteView;
 	}
 }

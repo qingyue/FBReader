@@ -19,23 +19,27 @@
 
 package org.geometerplus.zlibrary.ui.android.library;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.content.*;
-import android.view.*;
-import android.widget.ImageButton;
-import android.widget.TextView;
-import android.os.PowerManager;
-
-import org.geometerplus.fbreader.fbreader.ActionCode;
+import org.geometerplus.fbreader.fbreader.FBReaderApp;
+import org.geometerplus.fbreader.library.Book;
+import org.geometerplus.fbreader.library.Library;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
-import org.geometerplus.zlibrary.core.application.ZLApplication.PageChangeListener;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
-
 import org.geometerplus.zlibrary.ui.android.R;
 import org.geometerplus.zlibrary.ui.android.application.ZLAndroidApplicationWindow;
+
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.os.PowerManager;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 public abstract class ZLAndroidActivity extends Activity {
 	protected abstract ZLApplication createApplication();
@@ -89,10 +93,77 @@ public abstract class ZLAndroidActivity extends Activity {
 
 	protected abstract ZLFile fileFromIntent(Intent intent);
 
+	private Book createBookForFile(ZLFile file) {
+	    if (file == null) {
+	        return null;
+	    }
+	    Book book = Book.getByFile(file);
+	    if (book != null) {
+	        book.insertIntoBookList();
+	        return book;
+	    }
+	    if (file.isArchive()) {
+	        for (ZLFile child : file.children()) {
+	            book = Book.getByFile(child);
+	            if (book != null) {
+	                book.insertIntoBookList();
+	                return book;
+	            }
+	        }
+	    }
+	    return null;
+	}
+
+	private void emptyDifferentText()
+	{
+	    final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
+	    Book book = createBookForFile(fileFromIntent(getIntent()));
+	    if (fbReader == null) {
+	        return;
+	    }
+
+	    if (book == null) {
+	        if (fbReader.Model == null) {
+	            book = Library.Instance().getRecentBook();
+	            if (book == null || !book.File.exists()) {
+	                book = Book.getByFile(Library.getHelpFile());
+	            }
+	        }
+	        if (book == null) {
+	            return;
+	        }
+	    }
+
+	    if (fbReader.Model == null) {
+	        return;
+	    }
+	    if (fbReader.Model.Book != null && fbReader.Model.Book.File != null) {
+	        if (book.File.getPath().equals(fbReader.Model.Book.File.getPath())) {
+	            return;
+	        }
+	    }
+
+	    fbReader.onViewChanged();
+
+	    if (fbReader.Model.Book != null && fbReader.getBookTextView() != null) {
+	        fbReader.Model.Book.storePosition(fbReader.getBookTextView().getStartCursor());
+	    }
+	    if (fbReader.getBookTextView() != null) {
+	        fbReader.getfootnoteView().setModel(null);
+	    }
+	    if (fbReader.getfootnoteView() != null) {
+	        fbReader.getfootnoteView().setModel(null);
+	    }
+	    fbReader.clearTextCaches();
+	    fbReader.Model = null;
+	    System.gc();
+	    System.gc();
+	}
+
 	@Override
 	public void onCreate(Bundle state) {
 		super.onCreate(state);
-		
+
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler(this));
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -107,6 +178,8 @@ public abstract class ZLAndroidActivity extends Activity {
 			androidApplication.myMainWindow = new ZLAndroidApplicationWindow(application);
 			application.initWindow();
 		}
+
+		emptyDifferentText();
 
 		new Thread() {
 			public void run() {
