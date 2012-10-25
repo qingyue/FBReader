@@ -21,9 +21,11 @@ import org.geometerplus.zlibrary.text.view.ZLTextView;
 import org.geometerplus.zlibrary.text.view.ZLTextView.PagePosition;
 import org.geometerplus.zlibrary.text.view.style.ZLTextBaseStyle;
 import org.geometerplus.zlibrary.text.view.style.ZLTextStyleCollection;
+import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
 import org.geometerplus.zlibrary.ui.android.view.AndroidFontUtil;
 
 import android.content.pm.ActivityInfo;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 import com.onyx.android.sdk.ui.data.DirectoryItem;
@@ -37,6 +39,7 @@ import com.onyx.android.sdk.ui.dialog.DialogReaderMenu;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.FontSizeProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.LineSpacingProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.RotationScreenProperty;
+import com.onyx.android.sdk.ui.util.MenuItemIconProperty;
 /**
  * @author dxwts
  *
@@ -48,10 +51,12 @@ public class ShowDialogMenuAction extends FBAndroidAction
     private ZLTextBaseStyle mBaseStyle = null;
     
     private DialogReaderMenu mDialogReaderMenu;
+    private FBReader mFbReader = null;
     
     ShowDialogMenuAction(FBReader baseActivity, FBReaderApp fbreader)
     {
         super(baseActivity, fbreader);
+        mFbReader = baseActivity;
     }
 
     /* (non-Javadoc)
@@ -341,9 +346,30 @@ public class ShowDialogMenuAction extends FBAndroidAction
             {
                 ShowDialogMenuAction.this.showDirectoryDialog(DirectoryTab.annotation);
             }
+
+            @Override
+            public void toggleFullscreen()
+            {
+                final ZLAndroidLibrary zlibrary = (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
+                zlibrary.ShowStatusBarOption.setValue(!zlibrary.ShowStatusBarOption.getValue());
+                mDialogReaderMenu.dismiss();
+
+                WindowManager.LayoutParams params = mFbReader.getWindow().getAttributes();
+                if (zlibrary.ShowStatusBarOption.getValue()) {
+                    params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
+                } else {
+                    params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                }
+                mFbReader.getWindow().setAttributes(params);
+                mFbReader.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            }
         };
-        
-        mDialogReaderMenu = new DialogReaderMenu(BaseActivity, menu_handler);
+
+        final ZLAndroidLibrary zlibrary = (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
+        MenuItemIconProperty property = new MenuItemIconProperty();
+        property.setIsFullscreen(zlibrary.ShowStatusBarOption.getValue());
+        property.setIsZoom(false);
+        mDialogReaderMenu = new DialogReaderMenu(BaseActivity, menu_handler, property);
         mDialogReaderMenu.setCanceledOnTouchOutside(true);
         updatePage();
         mDialogReaderMenu.show();
