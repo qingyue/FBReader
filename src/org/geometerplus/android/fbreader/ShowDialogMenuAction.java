@@ -39,7 +39,6 @@ import com.onyx.android.sdk.ui.dialog.DialogReaderMenu;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.FontSizeProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.LineSpacingProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.RotationScreenProperty;
-import com.onyx.android.sdk.ui.util.MenuItemIconProperty;
 /**
  * @author dxwts
  *
@@ -356,20 +355,28 @@ public class ShowDialogMenuAction extends FBAndroidAction
 
                 WindowManager.LayoutParams params = mFbReader.getWindow().getAttributes();
                 if (zlibrary.ShowStatusBarOption.getValue()) {
-                    params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
-                } else {
                     params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                } else {
+                    params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
                 }
                 mFbReader.getWindow().setAttributes(params);
                 mFbReader.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
             }
+
+            @Override
+            public boolean showZoomSettings()
+            {
+                return false;
+            }
+
+            @Override
+            public boolean isFullscreen()
+            {
+                return !((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).ShowStatusBarOption.getValue();
+            }
         };
 
-        final ZLAndroidLibrary zlibrary = (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
-        MenuItemIconProperty property = new MenuItemIconProperty();
-        property.setIsFullscreen(zlibrary.ShowStatusBarOption.getValue());
-        property.setIsZoom(false);
-        mDialogReaderMenu = new DialogReaderMenu(BaseActivity, menu_handler, property);
+        mDialogReaderMenu = new DialogReaderMenu(BaseActivity, menu_handler);
         mDialogReaderMenu.setCanceledOnTouchOutside(true);
         updatePage();
         mDialogReaderMenu.show();
