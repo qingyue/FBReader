@@ -286,14 +286,14 @@ public final class FBReader extends ZLAndroidActivity {
 			final TipsManager manager = TipsManager.Instance();
 			switch (manager.requiredAction()) {
 				case Initialize:
-					startActivity(new Intent(
-						TipsActivity.INITIALIZE_ACTION, null, FBReader.this, TipsActivity.class
-					));
+//					startActivity(new Intent(
+//						TipsActivity.INITIALIZE_ACTION, null, FBReader.this, TipsActivity.class
+//					));
 					break;
 				case Show:
-					startActivity(new Intent(
-						TipsActivity.SHOW_TIP_ACTION, null, FBReader.this, TipsActivity.class
-					));
+//					startActivity(new Intent(
+//						TipsActivity.SHOW_TIP_ACTION, null, FBReader.this, TipsActivity.class
+//					));
 					break;
 				case Download:
 					manager.startDownloading();

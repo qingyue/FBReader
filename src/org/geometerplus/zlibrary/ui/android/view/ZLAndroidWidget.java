@@ -365,7 +365,8 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
         					}
         					postDelayed(myPendingShortClickRunnable, ViewConfiguration.getDoubleTapTimeout());
 						} else {
-						    if(x >= mBookmarkX && x <= mBookmarkX + mBookmarkBitmap.getWidth() && y >= mBookmarkY && y <= mBookmarkY + mBookmarkBitmap.getHeight()) {
+						    if(mBookmarkBitmap != null && x >= mBookmarkX && x <= mBookmarkX + mBookmarkBitmap.getWidth() && 
+						            y >= mBookmarkY && y <= mBookmarkY + mBookmarkBitmap.getHeight()) {
 						        final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
 						        final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
 						        if (bookmarkAdd != null) {
