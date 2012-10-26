@@ -28,12 +28,12 @@ import org.geometerplus.android.fbreader.api.ApiServerImplementation;
 import org.geometerplus.android.fbreader.api.PluginApi;
 import org.geometerplus.android.fbreader.library.KillerCallback;
 import org.geometerplus.android.fbreader.library.SQLiteBooksDatabase;
-import org.geometerplus.android.fbreader.tips.TipsActivity;
 import org.geometerplus.android.util.UIUtil;
 import org.geometerplus.fbreader.bookmodel.BookModel;
 import org.geometerplus.fbreader.fbreader.ActionCode;
 import org.geometerplus.fbreader.fbreader.FBReaderApp;
 import org.geometerplus.fbreader.library.Book;
+import org.geometerplus.fbreader.library.Library;
 import org.geometerplus.fbreader.tips.TipsManager;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.library.ZLibrary;
@@ -304,6 +304,64 @@ public final class FBReader extends ZLAndroidActivity {
 		}
 	}
 
+	   private Book createBookForFile(ZLFile file) {
+	        if (file == null) {
+	            return null;
+	        }
+	        Book book = Book.getByFile(file);
+	        if (book != null) {
+	            book.insertIntoBookList();
+	            return book;
+	        }
+	        if (file.isArchive()) {
+	            for (ZLFile child : file.children()) {
+	                book = Book.getByFile(child);
+	                if (book != null) {
+	                    book.insertIntoBookList();
+	                    return book;
+	                }
+	            }
+	        }
+	        return null;
+	    }
+
+	    private void emptyDifferentText()
+	    {
+	        final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
+	        Book book = createBookForFile(fileFromIntent(getIntent()));
+	        if (fbReader == null) {
+	            return;
+	        }
+
+	        if (book == null) {
+	            if (fbReader.Model == null) {
+	                book = Library.Instance().getRecentBook();
+	                if (book == null || !book.File.exists()) {
+	                    return;
+	                }
+	            }
+	            if (book == null) {
+	                return;
+	            }
+	        }
+
+	        if (fbReader.Model == null) {
+	            return;
+	        }
+	        if (fbReader.Model.Book != null && fbReader.Model.Book.File != null) {
+	            if (book.File.getPath().equals(fbReader.Model.Book.File.getPath())) {
+	                return;
+	            }
+	        }
+
+	        if (fbReader.getBookTextView() != null) {
+	            fbReader.getBookTextView().clearCaches();
+	        }
+	        if (fbReader.getfootnoteView() != null) {
+	            fbReader.getfootnoteView().clearCaches();
+	        }
+	    }
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -311,6 +369,9 @@ public final class FBReader extends ZLAndroidActivity {
 			sendBroadcast(new Intent(getApplicationContext(), KillerCallback.class));
 		} catch (Throwable t) {
 		}
+
+		emptyDifferentText();
+
 		PopupPanel.restoreVisibilities(FBReaderApp.Instance());
 		ApiServerImplementation.sendEvent(this, ApiListener.EVENT_READ_MODE_OPENED);
 	}
