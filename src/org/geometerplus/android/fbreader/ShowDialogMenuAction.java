@@ -39,6 +39,7 @@ import com.onyx.android.sdk.ui.dialog.DialogReaderMenu;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.FontSizeProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.LineSpacingProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.RotationScreenProperty;
+import com.onyx.android.sdk.ui.dialog.DialogScreenRefresh;
 /**
  * @author dxwts
  *
@@ -373,6 +374,13 @@ public class ShowDialogMenuAction extends FBAndroidAction
             public boolean isFullscreen()
             {
                 return !((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).ShowStatusBarOption.getValue();
+            }
+
+            @Override
+            public void setScreenRefresh()
+            {
+                DialogScreenRefresh dlg = new DialogScreenRefresh(BaseActivity);
+                dlg.show();
             }
         };
 

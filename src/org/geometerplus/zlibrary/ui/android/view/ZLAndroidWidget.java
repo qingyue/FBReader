@@ -35,6 +35,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -42,8 +43,11 @@ import android.view.ViewConfiguration;
 
 import com.onyx.android.sdk.device.EpdController;
 import com.onyx.android.sdk.device.EpdController.UpdateMode;
+import com.onyx.android.sdk.ui.dialog.DialogScreenRefresh;
 
 public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongClickListener {
+    private final static String TAG = "ZLAndroidWidget";
+    
 	private final Paint myPaint = new Paint();
 	private final BitmapManager myBitmapManager = new BitmapManager(this);
 	private Bitmap myFooterBitmap;
@@ -141,7 +145,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		if (animator.inProgress()) {
 			animator.draw(canvas);
 			if (animator.getMode().Auto) {
-				EpdController.invalidate(this, UpdateMode.GU);
+				this.epdInvalidateHelper();
 			}
 			drawFooter(canvas);
 			drawBookmarkIcon(canvas);
@@ -182,7 +186,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		final AnimationProvider animator = getAnimationProvider();
 		if (view.canScroll(animator.getPageToScrollTo(x, y))) {
 			animator.scrollTo(x, y);
-			EpdController.invalidate(this, UpdateMode.GU);
+			this.epdInvalidateHelper();
 		}
 	}
 
@@ -195,7 +199,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, x, y, speed);
 		if (animator.getMode().Auto) {
-		    EpdController.invalidate(this, UpdateMode.GU);
+		    this.epdInvalidateHelper();
 		}
 	}
 
@@ -208,7 +212,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		animator.setup(direction, getWidth(), getMainAreaHeight());
 		animator.startAnimatedScrolling(pageIndex, null, null, speed);
 		if (animator.getMode().Auto) {
-		    EpdController.invalidate(this, UpdateMode.GU);
+		    this.epdInvalidateHelper();
 		}
 	}
 
@@ -220,7 +224,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 			return;
 		}
 		animator.startAnimatedScrolling(x, y, speed);
-		EpdController.invalidate(this, UpdateMode.GU);
+		this.epdInvalidateHelper();
 	}
 
 	void drawOnBitmap(Bitmap bitmap, ZLView.PageIndex index) {
@@ -289,7 +293,21 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	    }
 	}
 
+	private int mPageRenderCount = 0;
+	private void epdInvalidateHelper()
+	{
+	    mPageRenderCount++;
+	    if (mPageRenderCount >= DialogScreenRefresh.RENDER_RESET_MAX_TIME) {
+	        EpdController.invalidate(this, UpdateMode.GC);
+	        mPageRenderCount = 0;
+	    }
+	    else {
+	        EpdController.invalidate(this, UpdateMode.GU);
+	    }
+	}
+	
 	private void onDrawStatic(Canvas canvas) {
+	    Log.d(TAG, "onDrawStatic");
 		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
 		drawBookmarkIcon(canvas);
