@@ -26,17 +26,18 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.geometerplus.fbreader.Paths;
+import org.geometerplus.fbreader.bookmodel.BookReadingException;
 import org.geometerplus.fbreader.formats.FormatPlugin;
 import org.geometerplus.fbreader.formats.PluginCollection;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.filesystem.ZLPhysicalFile;
-import org.geometerplus.zlibrary.core.image.ZLFileImage;
 import org.geometerplus.zlibrary.core.image.ZLImage;
 import org.geometerplus.zlibrary.core.image.ZLLoadableImage;
 import org.geometerplus.zlibrary.core.util.ZLMiscUtil;
@@ -44,9 +45,6 @@ import org.geometerplus.zlibrary.text.view.ZLTextPosition;
 import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageData;
 import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageManager;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
-
-import org.geometerplus.fbreader.formats.*;
-import org.geometerplus.fbreader.bookmodel.BookReadingException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -415,7 +413,7 @@ public class Book {
             data.setLocation(file.getAbsolutePath());
             data.setNativeAbsolutePath(file.getAbsolutePath());
             data.setSize(file.length());
-            data.setlastModified(file.lastModified());
+            data.setlastModified(new Date(file.lastModified()));
             
             Context ctx = ((ZLAndroidLibrary)ZLAndroidLibrary.Instance()).getActivity();
             if (OnyxCmsCenter.getMetadata(ctx, data)) {
