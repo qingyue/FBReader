@@ -50,10 +50,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
+
+import com.onyx.android.sdk.ui.SelectionPopupMenu;
 
 public final class FBReader extends ZLAndroidActivity {
 	public static final String BOOK_PATH_KEY = "BookPath";
@@ -409,20 +412,66 @@ public final class FBReader extends ZLAndroidActivity {
 		return true;
 	}
 
+	private SelectionPopupMenu mSelectionPopupMenu = null;
 	public void showSelectionPanel() {
-		final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
-		final ZLTextView view = fbReader.getTextView();
-		((SelectionPopup)fbReader.getPopupById(SelectionPopup.ID))
-			.move(view.getSelectionStartY(), view.getSelectionEndY());
-		fbReader.showPopup(SelectionPopup.ID);
+		if (mSelectionPopupMenu == null) {
+		    final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
+		    final ZLTextView view = fbReader.getTextView();
+		    final RelativeLayout root = (RelativeLayout)findViewById(R.id.root_view);
+		    SelectionPopupMenuHandler handler = new SelectionPopupMenuHandler(FBReader.this);
+		    mSelectionPopupMenu = new SelectionPopupMenu(FBReader.this, handler, root);
+		    mSelectionPopupMenu.move(view.getSelectionStartY(), view.getSelectionEndY());
+		    mSelectionPopupMenu.show();
+        }
+		else if (!mSelectionPopupMenu.isShow()) {
+            mSelectionPopupMenu.show();
+        }
+
+//		((SelectionPopup)fbReader.getPopupById(SelectionPopup.ID))
+//			.move(view.getSelectionStartY(), view.getSelectionEndY());
+//		fbReader.showPopup(SelectionPopup.ID);
 	}
 
 	public void hideSelectionPanel() {
-		final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
-		final FBReaderApp.PopupPanel popup = fbReader.getActivePopup();
-		if (popup != null && popup.getId() == SelectionPopup.ID) {
-			fbReader.hideActivePopup();
-		}
+	    if (mSelectionPopupMenu != null && mSelectionPopupMenu.isShow()) {
+            mSelectionPopupMenu.hide();
+        }
+
+//		final FBReaderApp fbReader = (FBReaderApp)FBReaderApp.Instance();
+//		final FBReaderApp.PopupPanel popup = fbReader.getActivePopup();
+//		if (popup != null && popup.getId() == SelectionPopup.ID) {
+//			fbReader.hideActivePopup();
+//		}
+	}
+
+	public SelectionPopupMenu getSelectionPopupMenu()
+	{
+	    return mSelectionPopupMenu;
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)
+	{
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	        if (mSelectionPopupMenu != null && mSelectionPopupMenu.isShow()) {
+	            return true;
+            }
+        }
+
+	    return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event)
+	{
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	        if (mSelectionPopupMenu != null && mSelectionPopupMenu.isShow()) {
+	            mSelectionPopupMenu.hide();
+                return true;
+            }
+        }
+
+	    return super.onKeyUp(keyCode, event);
 	}
 
 	private void onPreferencesUpdate(int resultCode) {
