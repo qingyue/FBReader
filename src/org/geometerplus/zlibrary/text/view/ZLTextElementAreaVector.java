@@ -82,6 +82,9 @@ final class ZLTextElementAreaVector {
 	}
 
 	ZLTextElementArea getFirstAfter(ZLTextPosition position) {
+		if (position == null) {
+			return null;
+		}
 		synchronized (myAreas) {
 			for (ZLTextElementArea area : myAreas) {
 				if (position.compareTo(area) <= 0) {
@@ -93,6 +96,9 @@ final class ZLTextElementAreaVector {
 	}
 
 	ZLTextElementArea getLastBefore(ZLTextPosition position) {
+		if (position == null) {
+			return null;
+		}
 		synchronized (myAreas) {
 			for (int i = myAreas.size() - 1; i >= 0; --i) {
 				final ZLTextElementArea area = myAreas.get(i);
@@ -163,9 +169,9 @@ final class ZLTextElementAreaVector {
 			if (myElementRegions.isEmpty()) {
 				return null;
 			}
-        
+
 			int index = currentRegion != null ? myElementRegions.indexOf(currentRegion) : -1;
-        
+
 			switch (direction) {
 				case rightToLeft:
 				case up:
@@ -186,7 +192,7 @@ final class ZLTextElementAreaVector {
 					}
 					break;
 			}
-        
+
 			switch (direction) {
 				case rightToLeft:
 					for (; index >= 0; --index) {

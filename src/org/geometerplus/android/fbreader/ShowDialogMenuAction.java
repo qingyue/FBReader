@@ -14,6 +14,7 @@ import org.geometerplus.fbreader.fbreader.FBReaderApp;
 import org.geometerplus.fbreader.fbreader.FBView;
 import org.geometerplus.fbreader.library.Book;
 import org.geometerplus.fbreader.library.Bookmark;
+import org.geometerplus.fbreader.library.Library;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.options.ZLIntegerRangeOption;
 import org.geometerplus.zlibrary.text.model.ZLTextModel;
@@ -142,7 +143,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
             {
                 mFonts = new ArrayList<String>();
                 final String optionValue = mBaseStyle.FontFamilyOption.getValue();
-                AndroidFontUtil.fillFamiliesList(mFonts, true);
+                AndroidFontUtil.fillFamiliesList(mFonts);
                 String[] fontfoces = new String[mFonts.size()];
                 for (int i = 0; i < mFonts.size(); i++) {
                     fontfoces[i] = mFonts.get(i);
@@ -166,38 +167,44 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void searchContent()
             {
-                ZLApplication.Instance().doAction(ActionCode.SEARCH);
+//                ZLApplication.Instance().doAction(ActionCode.SEARCH);
+                ZLApplication.Instance().runAction(ActionCode.SEARCH);
             }
             
             @Override
             public void rotationScreen(int i)
             {
                 if (i == -1) {
-                    ZLApplication.Instance().doAction(ActionCode.SET_SCREEN_ORIENTATION_LANDSCAPE);
+//                    ZLApplication.Instance().doAction(ActionCode.SET_SCREEN_ORIENTATION_LANDSCAPE);
+                    ZLApplication.Instance().runAction(ActionCode.SET_SCREEN_ORIENTATION_LANDSCAPE);
                 }
                 else {
-                    ZLApplication.Instance().doAction(ActionCode.SET_SCREEN_ORIENTATION_PORTRAIT);
+//                    ZLApplication.Instance().doAction(ActionCode.SET_SCREEN_ORIENTATION_PORTRAIT);
+                    ZLApplication.Instance().runAction(ActionCode.SET_SCREEN_ORIENTATION_PORTRAIT);
                 }
             }
             
             @Override
             public void previousPage()
             {
-                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_BACK);
+//                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_BACK);
+                ZLApplication.Instance().runAction(ActionCode.TURN_PAGE_BACK);
                 updatePage();
             }
             
             @Override
             public void nextPage()
             {
-                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD);
+//                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD);
+                ZLApplication.Instance().runAction(ActionCode.TURN_PAGE_FORWARD);
                 updatePage();
             }
             
             @Override
             public void increaseFontSize()
             {
-                ZLApplication.Instance().doAction(ActionCode.INCREASE_FONT);
+//                ZLApplication.Instance().doAction(ActionCode.INCREASE_FONT);
+                ZLApplication.Instance().runAction(ActionCode.INCREASE_FONT);
             }
             
             @Override
@@ -236,7 +243,8 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void decreaseFontSize()
             {
-                ZLApplication.Instance().doAction(ActionCode.DECREASE_FONT);
+//                ZLApplication.Instance().doAction(ActionCode.DECREASE_FONT);
+                ZLApplication.Instance().runAction(ActionCode.DECREASE_FONT);
             }
             
             @Override
@@ -418,7 +426,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
     {
         final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
         ArrayList<DirectoryItem> bookmarks = new ArrayList<DirectoryItem>();
-        List<Bookmark>allBooksBookmarks = Bookmark.bookmarks();
+        List<Bookmark>allBooksBookmarks = Library.Instance().invisibleBookmarks(fbreader.Model.Book);
         Collections.sort(allBooksBookmarks, new Bookmark.ByTimeComparator());
 
         if (fbreader.Model != null) {

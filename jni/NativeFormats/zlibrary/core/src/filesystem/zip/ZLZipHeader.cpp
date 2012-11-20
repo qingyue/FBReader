@@ -23,15 +23,37 @@
 #include "ZLZDecompressor.h"
 #include "../ZLInputStream.h"
 
+const int ZLZipHeader::SignatureCentralDirectory = 0x02014B50;
 const int ZLZipHeader::SignatureLocalFile = 0x04034B50;
+const int ZLZipHeader::SignatureEndOfCentralDirectory = 0x06054B50;
 const int ZLZipHeader::SignatureData = 0x08074B50;
 
 bool ZLZipHeader::readFrom(ZLInputStream &stream) {
-	size_t startOffset = stream.offset();
+	std::size_t startOffset = stream.offset();
 	Signature = readLong(stream);
 	switch (Signature) {
 		default:
-			return false;
+			return stream.offset() == startOffset + 4;
+		case SignatureCentralDirectory:
+		{
+			Version = readLong(stream);
+			Flags = readShort(stream);
+			CompressionMethod = readShort(stream);
+			ModificationTime = readShort(stream);
+			ModificationDate = readShort(stream);
+			CRC32 = readLong(stream);
+			CompressedSize = readLong(stream);
+			UncompressedSize = readLong(stream);
+			if (CompressionMethod == 0 && CompressedSize != UncompressedSize) {
+				ZLLogger::Instance().println("zip", "Different compressed & uncompressed size for stored entry; the uncompressed one will be used.");
+				CompressedSize = UncompressedSize;
+			}
+			NameLength = readShort(stream);
+			ExtraLength = readShort(stream);
+			const unsigned short toSkip = readShort(stream);
+			stream.seek(12 + NameLength + ExtraLength + toSkip, false);
+			return stream.offset() == startOffset + 42 + NameLength + ExtraLength + toSkip;
+		}
 		case SignatureLocalFile:
 			Version = readShort(stream);
 			Flags = readShort(stream);
@@ -48,6 +70,14 @@ bool ZLZipHeader::readFrom(ZLInputStream &stream) {
 			NameLength = readShort(stream);
 			ExtraLength = readShort(stream);
 			return stream.offset() == startOffset + 30 && NameLength != 0;
+		case SignatureEndOfCentralDirectory:
+		{
+			stream.seek(16, false);
+			const unsigned short toSkip = readShort(stream);
+			stream.seek(toSkip, false);
+			UncompressedSize = 0;
+			return stream.offset() == startOffset + 18 + toSkip;
+		}
 		case SignatureData:
 			CRC32 = readLong(stream);
 			CompressedSize = readLong(stream);
@@ -63,10 +93,10 @@ void ZLZipHeader::skipEntry(ZLInputStream &stream, ZLZipHeader &header) {
 		default:
 			break;
 		case SignatureLocalFile:
-			if (header.Flags & 0x08) {
+			if ((header.Flags & 0x08) == 0x08 && header.CompressionMethod != 0) {
 				stream.seek(header.ExtraLength, false);
-				ZLZDecompressor decompressor((size_t)-1);
-				size_t size;
+				ZLZDecompressor decompressor((std::size_t)-1);
+				std::size_t size;
 				do {
 					size = decompressor.decompress(stream, 0, 2048);
 					header.UncompressedSize += size;

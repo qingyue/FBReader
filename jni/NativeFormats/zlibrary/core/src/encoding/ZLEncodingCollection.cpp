@@ -25,8 +25,9 @@
 
 #include "ZLEncodingConverter.h"
 #include "DummyEncodingConverter.h"
-//#include "MyEncodingConverter.h"
-#include "EncodingCollectionReader.h"
+#include "Utf8EncodingConverter.h"
+#include "Utf16EncodingConverters.h"
+#include "JavaEncodingConverter.h"
 
 ZLEncodingCollection *ZLEncodingCollection::ourInstance = 0;
 
@@ -43,48 +44,33 @@ std::string ZLEncodingCollection::encodingDescriptionPath() {
 
 ZLEncodingCollection::ZLEncodingCollection() {
 	registerProvider(new DummyEncodingConverterProvider());
-	//registerProvider(new MyEncodingConverterProvider());
+	registerProvider(new Utf8EncodingConverterProvider());
+	registerProvider(new Utf16EncodingConverterProvider());
+	registerProvider(new JavaEncodingConverterProvider());
 }
 
 void ZLEncodingCollection::registerProvider(shared_ptr<ZLEncodingConverterProvider> provider) {
 	myProviders.push_back(provider);
 }
 
-void ZLEncodingCollection::init() {
-	if (mySets.empty()) {
-		ZLEncodingCollectionReader(*this).readDocument(ZLFile(
-			encodingDescriptionPath() + ZLibrary::FileNameDelimiter + "Encodings.xml"
-		));
-	}
-}
-
 ZLEncodingCollection::~ZLEncodingCollection() {
 }
 
-const std::vector<shared_ptr<ZLEncodingConverterProvider> > &ZLEncodingCollection::providers() const {
-	return myProviders;
-}
-
-const std::vector<shared_ptr<ZLEncodingSet> > &ZLEncodingCollection::sets() {
-	init();
-	return mySets;
-}
-
-ZLEncodingConverterInfoPtr ZLEncodingCollection::info(const std::string &name) {
-	init();
-	std::string lowerCaseName = ZLUnicodeUtil::toLower(name);
-	if (lowerCaseName == "iso-8859-1") {
-		lowerCaseName = "windows-1252";
+shared_ptr<ZLEncodingConverter> ZLEncodingCollection::converter(const std::string &name) const {
+	for (std::vector<shared_ptr<ZLEncodingConverterProvider> >::const_iterator it = myProviders.begin(); it != myProviders.end(); ++it) {
+		if ((*it)->providesConverter(name)) {
+			return (*it)->createConverter(name);
+		}
 	}
-	return myInfosByName[lowerCaseName];
+	return 0;
 }
 
-shared_ptr<ZLEncodingConverter> ZLEncodingCollection::defaultConverter() {
-	return DummyEncodingConverterProvider().createConverter();
-}
-
-ZLEncodingConverterInfoPtr ZLEncodingCollection::info(int code) {
+shared_ptr<ZLEncodingConverter> ZLEncodingCollection::converter(int code) const {
 	std::string name;
 	ZLStringUtil::appendNumber(name, code);
-	return info(name);
+	return converter(name);
+}
+
+shared_ptr<ZLEncodingConverter> ZLEncodingCollection::defaultConverter() const {
+	return converter(ZLEncodingConverter::UTF8);
 }

@@ -20,39 +20,48 @@
 package org.geometerplus.fbreader.formats;
 
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.encodings.EncodingCollection;
+import org.geometerplus.zlibrary.core.encodings.JavaEncodingCollection;
 import org.geometerplus.zlibrary.core.image.*;
 import org.geometerplus.zlibrary.core.util.MimeType;
 
 import org.geometerplus.fbreader.bookmodel.BookModel;
 import org.geometerplus.fbreader.bookmodel.BookReadingException;
 import org.geometerplus.fbreader.library.Book;
+import org.geometerplus.fbreader.formats.fb2.FB2NativePlugin;
+import org.geometerplus.fbreader.formats.oeb.OEBNativePlugin;
 
 public class NativeFormatPlugin extends FormatPlugin {
-	private static Object ourCoversLock = new Object();
+	public static NativeFormatPlugin create(String fileType) {
+		if ("fb2".equals(fileType)) {
+			return new FB2NativePlugin();
+		} else if ("ePub".equals(fileType)) {
+			return new OEBNativePlugin();
+		} else {
+			return new NativeFormatPlugin(fileType);
+		}
+	}
 
-	// No free method because all plugins' instances are freed by 
-	//   PluginCollection::deleteInstance method (C++)
-
-	public NativeFormatPlugin(String fileType) {
+	protected NativeFormatPlugin(String fileType) {
 		super(fileType);
 	}
 
 	@Override
-	public void readMetaInfo(Book book) throws BookReadingException {
+	synchronized public void readMetaInfo(Book book) throws BookReadingException {
 		if (!readMetaInfoNative(book)) {
-			throw new BookReadingException("errorReadingFile", book.File.getPath());
+			throw new BookReadingException("errorReadingFile", book.File);
 		}
 	}
 
 	private native boolean readMetaInfoNative(Book book);
 
 	@Override
-	public native boolean readLanguageAndEncoding(Book book);
+	public native void detectLanguageAndEncoding(Book book);
 
 	@Override
-	public void readModel(BookModel model) throws BookReadingException {
+	synchronized public void readModel(BookModel model) throws BookReadingException {
 		if (!readModelNative(model)) {
-			throw new BookReadingException("errorReadingFile", model.Book.File.getPath());
+			throw new BookReadingException("errorReadingFile", model.Book.File);
 		}
 	}
 
@@ -73,21 +82,16 @@ public class NativeFormatPlugin extends FormatPlugin {
 
 			@Override
 			public ZLSingleImage getRealImage() {
-				// Synchronized block is needed because we use temporary storage files
-				synchronized (ourCoversLock) {
-					return (ZLSingleImage)readCoverInternal(file);
-				}
+				final ZLImage[] box = new ZLImage[1];
+				readCoverInternal(file, box);
+				return (ZLSingleImage)box[0];
 			}
 		};
 	}
 
-	protected native ZLImage readCoverInternal(ZLFile file);
+	protected native void readCoverInternal(ZLFile file, ZLImage[] box);
 
-	public static ZLImage createImage(String mimeType, String fileName, int offset, int length) {
-		return new ZLFileImage(MimeType.get(mimeType), ZLFile.createFileByPath(fileName), offset, length);
-	}
-
-	// FIXME: temporary implementation; implement as a native code
+	// FIXME: temporary implementation; implement as a native code (?)
 	@Override
 	public String readAnnotation(ZLFile file) {
 		final FormatPlugin plugin = PluginCollection.Instance().getPlugin(file, FormatPlugin.Type.JAVA);
@@ -100,5 +104,15 @@ public class NativeFormatPlugin extends FormatPlugin {
 	@Override
 	public Type type() {
 		return Type.NATIVE;
+	}
+
+	@Override
+	public EncodingCollection supportedEncodings() {
+		return JavaEncodingCollection.Instance();
+	}
+
+	@Override
+	public String toString() {
+		return "NativeFormatPlugin [" + supportedFileType() + "]";
 	}
 }

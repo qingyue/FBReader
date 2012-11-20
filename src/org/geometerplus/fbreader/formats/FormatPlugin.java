@@ -20,6 +20,7 @@
 package org.geometerplus.fbreader.formats;
 
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.encodings.EncodingCollection;
 import org.geometerplus.zlibrary.core.image.ZLImage;
 
 import org.geometerplus.fbreader.bookmodel.BookModel;
@@ -37,9 +38,12 @@ public abstract class FormatPlugin {
 		return myFileType;
 	}
 
+	public ZLFile realBookFile(ZLFile file) throws BookReadingException {
+		return file;
+	}
 	public abstract void readMetaInfo(Book book) throws BookReadingException;
 	public abstract void readModel(BookModel model) throws BookReadingException;
-	public abstract boolean readLanguageAndEncoding(Book book);
+	public abstract void detectLanguageAndEncoding(Book book) throws BookReadingException;
 	public abstract ZLImage readCover(ZLFile file);
 	public abstract String readAnnotation(ZLFile file);
 
@@ -51,4 +55,6 @@ public abstract class FormatPlugin {
 		NONE
 	};
 	public abstract Type type();
+
+	public abstract EncodingCollection supportedEncodings();
 }

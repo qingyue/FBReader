@@ -60,11 +60,11 @@ public:
 	virtual bool readMetaInfo(Book &book) const = 0;
 	virtual bool readLanguageAndEncoding(Book &book) const = 0;
 	virtual bool readModel(BookModel &model) const = 0;
-	virtual shared_ptr<ZLImage> coverImage(const ZLFile &file) const;
+	virtual shared_ptr<const ZLImage> coverImage(const ZLFile &file) const;
 
 protected:
-	static void detectEncodingAndLanguage(Book &book, ZLInputStream &stream);
-	static void detectLanguage(Book &book, ZLInputStream &stream);
+	static bool detectEncodingAndLanguage(Book &book, ZLInputStream &stream, bool force = false);
+	static bool detectLanguage(Book &book, ZLInputStream &stream, const std::string &encoding, bool force = false);
 };
 
 class PluginCollection {
@@ -84,8 +84,6 @@ public:
 	shared_ptr<FormatPlugin> pluginByType(const std::string &fileType) const;
 
 	bool isLanguageAutoDetectEnabled();
-	std::string defaultLanguage();
-	std::string defaultEncoding();
 
 private:
 	static PluginCollection *ourInstance;

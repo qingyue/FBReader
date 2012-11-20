@@ -19,25 +19,29 @@ public class SelectionPopupMenuHandler implements ISelectionHandler
     @Override
     public void copy()
     { 
-        ZLApplication.Instance().doAction(ActionCode.SELECTION_COPY_TO_CLIPBOARD);
+//        ZLApplication.Instance().doAction(ActionCode.SELECTION_COPY_TO_CLIPBOARD);
+        ZLApplication.Instance().runAction(ActionCode.SELECTION_COPY_TO_CLIPBOARD);
     }
 
     @Override
     public void share()
     {
-        ZLApplication.Instance().doAction(ActionCode.SELECTION_SHARE);
+//        ZLApplication.Instance().doAction(ActionCode.SELECTION_SHARE);
+        ZLApplication.Instance().runAction(ActionCode.SELECTION_SHARE);
     }
 
     @Override
     public void translation()
     {
-        ZLApplication.Instance().doAction(ActionCode.SELECTION_TRANSLATE);
+//        ZLApplication.Instance().doAction(ActionCode.SELECTION_TRANSLATE);
+        ZLApplication.Instance().runAction(ActionCode.SELECTION_TRANSLATE);
     }
 
     @Override
     public void addBookmark()
     {
-        ZLApplication.Instance().doAction(ActionCode.SELECTION_BOOKMARK);
+//        ZLApplication.Instance().doAction(ActionCode.SELECTION_BOOKMARK);
+        ZLApplication.Instance().runAction(ActionCode.SELECTION_BOOKMARK);
     }
 
     @Override

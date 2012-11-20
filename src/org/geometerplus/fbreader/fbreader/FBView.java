@@ -54,18 +54,16 @@ public final class FBView extends ZLTextView {
 	private boolean myIsBrightnessAdjustmentInProgress;
 	private int myStartBrightness;
 
-	private String myZoneMapId;
 	private TapZoneMap myZoneMap;
 
 	private TapZoneMap getZoneMap() {
-		//final String id =
-		//	ScrollingPreferences.Instance().TapZonesSchemeOption.getValue().toString();
-		final String id =
-			ScrollingPreferences.Instance().HorizontalOption.getValue()
-				? "right_to_left" : "up";
-		if (!id.equals(myZoneMapId)) {
-			myZoneMap = new TapZoneMap(id);
-			myZoneMapId = id;
+		final ScrollingPreferences prefs = ScrollingPreferences.Instance();
+		String id = prefs.TapZoneMapOption.getValue();
+		if ("".equals(id)) {
+			id = ScrollingPreferences.Instance().HorizontalOption.getValue() ? "right_to_left" : "up";
+		}
+		if (myZoneMap == null || !id.equals(myZoneMap.Name)) {
+			myZoneMap = TapZoneMap.zoneMap(id);
 		}
 		return myZoneMap;
 	}
@@ -80,11 +78,11 @@ public final class FBView extends ZLTextView {
 			selectRegion(region);
 			myReader.getViewWidget().reset();
 			myReader.getViewWidget().repaint();
-			myReader.doAction(ActionCode.PROCESS_HYPERLINK);
+			myReader.runAction(ActionCode.PROCESS_HYPERLINK);
 			return true;
 		}
 
-		myReader.doAction(getZoneMap().getActionByCoordinates(
+		myReader.runAction(getZoneMap().getActionByCoordinates(
 			x, y, myContext.getWidth(), myContext.getHeight(),
 			isDoubleTapSupported() ? TapZoneMap.Tap.singleNotDoubleTap : TapZoneMap.Tap.singleTap
 		), x, y);
@@ -102,7 +100,7 @@ public final class FBView extends ZLTextView {
 		if (super.onFingerDoubleTap(x, y)) {
 			return true;
 		}
-		myReader.doAction(getZoneMap().getActionByCoordinates(
+		myReader.runAction(getZoneMap().getActionByCoordinates(
 			x, y, myContext.getWidth(), myContext.getHeight(), TapZoneMap.Tap.doubleTap
 		), x, y);
 		return true;
@@ -115,7 +113,7 @@ public final class FBView extends ZLTextView {
 
 		final ZLTextSelectionCursor cursor = findSelectionCursor(x, y, MAX_SELECTION_DISTANCE);
 		if (cursor != ZLTextSelectionCursor.None) {
-			myReader.doAction(ActionCode.SELECTION_HIDE_PANEL);
+			myReader.runAction(ActionCode.SELECTION_HIDE_PANEL);
 			moveSelectionCursorTo(cursor, x, y);
 			return true;
 		}
@@ -217,7 +215,7 @@ public final class FBView extends ZLTextView {
 			if (soul instanceof ZLTextWordRegionSoul) {
 				switch (myReader.WordTappingActionOption.getValue()) {
 					case startSelecting:
-						myReader.doAction(ActionCode.SELECTION_HIDE_PANEL);
+						myReader.runAction(ActionCode.SELECTION_HIDE_PANEL);
 						initSelection(x, y);
 						final ZLTextSelectionCursor cursor = findSelectionCursor(x, y);
 						if (cursor != ZLTextSelectionCursor.None) {
@@ -236,7 +234,7 @@ public final class FBView extends ZLTextView {
 			} else if (soul instanceof ZLTextHyperlinkRegionSoul) {
 				doSelectRegion = true;
 			}
-        
+
 			if (doSelectRegion) {
 				selectRegion(region);
 				myReader.getViewWidget().reset();
@@ -309,7 +307,7 @@ public final class FBView extends ZLTextView {
 			}
 
 			if (doRunAction) {
-				myReader.doAction(ActionCode.PROCESS_HYPERLINK);
+				myReader.runAction(ActionCode.PROCESS_HYPERLINK);
 				return true;
 			}
 		}
@@ -328,6 +326,11 @@ public final class FBView extends ZLTextView {
 
 		new MoveCursorAction(myReader, direction).run();
 		return true;
+	}
+
+	@Override
+	public ImageFitting getImageFitting() {
+		return myReader.FitImagesToScreenOption.getValue();
 	}
 
 	@Override
@@ -356,12 +359,19 @@ public final class FBView extends ZLTextView {
 		if ("".equals(filePath)) {
 			return null;
 		}
-		
+
 		final ZLFile file = ZLFile.createFileByPath(filePath);
 		if (file == null || !file.exists()) {
 			return null;
 		}
 		return file;
+	}
+
+	@Override
+	public ZLPaintContext.WallpaperMode getWallpaperMode() {
+		return getWallpaperFile() instanceof ZLResourceFile
+			? ZLPaintContext.WallpaperMode.TILE_MIRROR
+			: ZLPaintContext.WallpaperMode.TILE;
 	}
 
 	@Override
@@ -447,6 +457,13 @@ public final class FBView extends ZLTextView {
 		}
 
 		public synchronized void paint(ZLPaintContext context) {
+			final ZLFile wallpaper = getWallpaperFile();
+			if (wallpaper != null) {
+				context.clear(wallpaper, getWallpaperMode());
+			} else {
+				context.clear(getBackgroundColor());
+			}
+
 			final FBReaderApp reader = myReader;
 			if (reader == null) {
 				return;
@@ -496,12 +513,6 @@ public final class FBView extends ZLTextView {
 			final String infoString = info.toString();
 
 			final int infoWidth = context.getStringWidth(infoString);
-			final ZLFile wallpaper = getWallpaperFile();
-			if (wallpaper != null) {
-				context.clear(wallpaper, wallpaper instanceof ZLResourceFile);
-			} else {
-				context.clear(getBackgroundColor());
-			}
 
 			// draw info text
 			context.setTextColor(fgColor);
@@ -584,7 +595,7 @@ public final class FBView extends ZLTextView {
 	protected void releaseSelectionCursor() {
 		super.releaseSelectionCursor();
 		if (getCountOfSelectedWords() > 0) {
-			myReader.doAction(ActionCode.SELECTION_SHOW_PANEL);
+			myReader.runAction(ActionCode.SELECTION_SHOW_PANEL);
 		}
 	}
 

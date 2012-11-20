@@ -17,7 +17,7 @@
  * 02110-1301, USA.
  */
 
-#include <string.h>
+#include <cstring>
 
 #include <ZLFile.h>
 #include <ZLInputStream.h>
@@ -39,22 +39,25 @@ void ZLXMLReaderInternal::fStartElementHandler(void *userData, const char *name,
 		if (reader.processNamespaces()) {
 			int count = 0;
 			for (const char **a = attributes; (*a != 0) && (*(a + 1) != 0); a += 2) {
-				if (strncmp(*a, "xmlns:", 6) == 0) {
+				if (std::strncmp(*a, "xmlns", 5) == 0) {
+					std::string id;
+					if ((*a)[5] == ':') {
+						id = *a + 6;
+					} else if ((*a)[5] != '\0') {
+						continue;
+					}
 					if (count == 0) {
 						reader.myNamespaces.push_back(
 							new std::map<std::string,std::string>(*reader.myNamespaces.back())
 						);
 					}
 					++count;
-					const std::string id(*a + 6);
 					const std::string reference(*(a + 1));
 					(*reader.myNamespaces.back())[id] = reference;
 				}
 			}
 			if (count == 0) {
 				reader.myNamespaces.push_back(reader.myNamespaces.back());
-			} else {
-				reader.namespaceListChangedHandler();
 			}
 		}
 		reader.startElementHandler(name, attributes);
@@ -68,25 +71,19 @@ void ZLXMLReaderInternal::fEndElementHandler(void *userData, const char *name) {
 		if (reader.processNamespaces()) {
 			shared_ptr<std::map<std::string,std::string> > oldMap = reader.myNamespaces.back();
 			reader.myNamespaces.pop_back();
-			if (reader.myNamespaces.back() != oldMap) {
-				reader.namespaceListChangedHandler();
-			}
 		}
 	}
 }
 
 static int fUnknownEncodingHandler(void*, const XML_Char *name, XML_Encoding *encoding) {
-	ZLEncodingConverterInfoPtr info = ZLEncodingCollection::Instance().info(name);
-	if (!info.isNull()) {
-		shared_ptr<ZLEncodingConverter> converter = info->createConverter();
-		if (!converter.isNull() && converter->fillTable(encoding->map)) {
-			return XML_STATUS_OK;
-		}
+	shared_ptr<ZLEncodingConverter> converter = ZLEncodingCollection::Instance().converter(name);
+	if (!converter.isNull() && converter->fillTable(encoding->map)) {
+		return XML_STATUS_OK;
 	}
 	return XML_STATUS_ERROR;
 }
 
-static const size_t BUFSIZE = 2048;
+static const std::size_t BUFSIZE = 2048;
 
 static void parseDTD(XML_Parser parser, const std::string &fileName) {
 	XML_Parser entityParser = XML_ExternalEntityParserCreate(parser, 0, 0);
@@ -94,7 +91,7 @@ static void parseDTD(XML_Parser parser, const std::string &fileName) {
 	shared_ptr<ZLInputStream> entityStream = dtdFile.inputStream();
 	if (!entityStream.isNull() && entityStream->open()) {
 		char buffer[BUFSIZE];
-		size_t length;
+		std::size_t length;
 		do {
 			length = entityStream->read(buffer, BUFSIZE);
 			if (XML_Parse(entityParser, buffer, length, 0) == XML_STATUS_ERROR) {
@@ -163,6 +160,10 @@ void ZLXMLReaderInternal::init(const char *encoding) {
 	XML_SetUnknownEncodingHandler(myParser, fUnknownEncodingHandler, 0);
 }
 
-bool ZLXMLReaderInternal::parseBuffer(const char *buffer, size_t len) {
+bool ZLXMLReaderInternal::parseBuffer(const char *buffer, std::size_t len) {
 	return XML_Parse(myParser, buffer, len, 0) != XML_STATUS_ERROR;
+}
+
+std::size_t ZLXMLReaderInternal::getCurrentPosition() const {
+	return XML_GetCurrentByteIndex(myParser);
 }

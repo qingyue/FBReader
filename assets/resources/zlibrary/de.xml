@@ -32,20 +32,6 @@
 		<node name="red" value="Rot"/>
 		<node name="green" value="Grün"/>
 		<node name="blue" value="Blau"/>
-		<node name="black" value="Schwarz"/>
-		<node name="white" value="Weiß"/>
-		<node name="maroon" value="Hellbraun"/>
-		<node name="olive" value="Oliv"/>
-		<node name="navy" value="Marine"/>
-		<node name="purple" value="Violett"/>
-		<node name="teal" value="Blaugrün"/>
-		<node name="silver" value="Silber"/>
-		<node name="gray" value="Grau"/>
-		<node name="lime" value="Hellgrün"/>
-		<node name="yellow" value="Gelb"/>
-		<node name="magenta" value="Dunkelrot"/>
-		<node name="cyan" value="Türkis"/>
-		<node name="custom..." value="Weitere..."/>
 	</node>
 	<node name="language">
 		<node name="ar" value="Arabisch"/>
@@ -58,19 +44,20 @@
 		<node name="es" value="Spanisch"/>
 		<node name="fi" value="Finnisch"/>
 		<node name="fr" value="Französisch"/>
-		<node name="gl" value="Galician" toBeTranslated="true"/>
+		<node name="gl" value="Galicisch"/>
 		<node name="he" value="Hebräisch"/>
 		<node name="hu" value="Ungarisch"/>
 		<node name="id" value="Indonesisch"/>
 		<node name="it" value="Italienisch"/>
 		<node name="lt" value="Litauisch"/>
 		<node name="nl" value="Niederländisch"/>
-		<node name="no" value="Norwegisch"/>
+		<node name="nb" value="Norwegisch"/>
 		<node name="pl" value="Polnisch"/>
 		<node name="pt" value="Portugiesisch"/>
-		<node name="ro" value="Romanian" toBeTranslated="true"/>
+		<node name="ro" value="Rumänisch"/>
 		<node name="ru" value="Russisch"/>
 		<node name="sv" value="Schwedisch"/>
+		<node name="ta" value="Tamilisch"/>
 		<node name="th" value="Thailändich"/>
 		<node name="tr" value="Türkisch"/>
 		<node name="uk" value="Ukrainisch"/>

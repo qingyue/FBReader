@@ -20,6 +20,9 @@
 #include <cstdlib>
 #include <map>
 
+#include <AndroidUtil.h>
+#include <JniEnvelope.h>
+
 #include <ZLibrary.h>
 #include <ZLFile.h>
 #include <ZLXMLReader.h>
@@ -44,7 +47,7 @@ struct ZLUnicodeData {
 ZLUnicodeData::ZLUnicodeData(const SymbolType type, ZLUnicodeUtil::Ucs4Char lowerCase, ZLUnicodeUtil::Ucs4Char upperCase) : Type(type), LowerCase(lowerCase), UpperCase(upperCase) {
 }
 
-static std::map<ZLUnicodeUtil::Ucs4Char,ZLUnicodeData> UNICODE_TABLE;
+/*static std::map<ZLUnicodeUtil::Ucs4Char,ZLUnicodeData> UNICODE_TABLE;
 
 class ZLUnicodeTableReader : public ZLXMLReader {
 
@@ -86,6 +89,7 @@ static void initUnicodeTable() {
 		inProgress = false;
 	}
 }
+*/
 
 bool ZLUnicodeUtil::isUtf8String(const char *str, int len) {
 	const char *last = str + len;
@@ -351,6 +355,7 @@ void ZLUnicodeUtil::ucs2ToUtf8(std::string &to, const Ucs2String &from, int toLe
 	}
 }
 
+/*
 bool ZLUnicodeUtil::isLetter(Ucs4Char ch) {
 	initUnicodeTable();
 	std::map<ZLUnicodeUtil::Ucs4Char,ZLUnicodeData>::const_iterator it = UNICODE_TABLE.find(ch);
@@ -366,6 +371,7 @@ bool ZLUnicodeUtil::isLetter(Ucs4Char ch) {
 			return false;
 	}
 }
+*/
 
 bool ZLUnicodeUtil::isSpace(Ucs4Char ch) {
 	return
@@ -437,6 +443,7 @@ ZLUnicodeUtil::Breakable ZLUnicodeUtil::isBreakable(Ucs4Char c) {
 	return BREAKABLE_AFTER;
 }
 
+/*
 ZLUnicodeUtil::Ucs4Char ZLUnicodeUtil::toLower(Ucs4Char ch) {
 	initUnicodeTable();
 	std::map<ZLUnicodeUtil::Ucs4Char,ZLUnicodeData>::const_iterator it = UNICODE_TABLE.find(ch);
@@ -448,8 +455,10 @@ void ZLUnicodeUtil::toLower(Ucs4String &str) {
 		*it = toLower(*it);
 	}
 }
+*/
 
 std::string ZLUnicodeUtil::toLower(const std::string &utf8String) {
+	/*
 	Ucs4String ucs4String;
 	utf8ToUcs4(ucs4String, utf8String);
 
@@ -458,8 +467,27 @@ std::string ZLUnicodeUtil::toLower(const std::string &utf8String) {
 	std::string result;
 	ucs4ToUtf8(result, ucs4String, utf8String.length());
 	return result;
+	*/
+	if (utf8String.empty()) {
+		return utf8String;
+	}
+
+	JNIEnv *env = AndroidUtil::getEnv();
+	jstring javaString = AndroidUtil::createJavaString(env, utf8String);
+	jstring lowerCased = AndroidUtil::Method_java_lang_String_toLowerCase->callForJavaString(javaString);
+	if (javaString == lowerCased) {
+		env->DeleteLocalRef(lowerCased);
+		env->DeleteLocalRef(javaString);
+		return utf8String;
+	} else {
+		const std::string result = AndroidUtil::fromJavaString(env, lowerCased);
+		env->DeleteLocalRef(lowerCased);
+		env->DeleteLocalRef(javaString);
+		return result;
+	}
 }
 
+/*
 ZLUnicodeUtil::Ucs4Char ZLUnicodeUtil::toUpper(Ucs4Char ch) {
 	initUnicodeTable();
 	std::map<ZLUnicodeUtil::Ucs4Char,ZLUnicodeData>::const_iterator it = UNICODE_TABLE.find(ch);
@@ -471,8 +499,10 @@ void ZLUnicodeUtil::toUpper(Ucs4String &str) {
 		*it = toUpper(*it);
 	}
 }
+*/
 
 std::string ZLUnicodeUtil::toUpper(const std::string &utf8String) {
+	/*
 	Ucs4String ucs4String;
 	utf8ToUcs4(ucs4String, utf8String);
 
@@ -481,4 +511,22 @@ std::string ZLUnicodeUtil::toUpper(const std::string &utf8String) {
 	std::string result;
 	ucs4ToUtf8(result, ucs4String, utf8String.length());
 	return result;
+	*/
+	if (utf8String.empty()) {
+		return utf8String;
+	}
+
+	JNIEnv *env = AndroidUtil::getEnv();
+	jstring javaString = AndroidUtil::createJavaString(env, utf8String);
+	jstring upperCased = AndroidUtil::Method_java_lang_String_toUpperCase->callForJavaString(javaString);
+	if (javaString == upperCased) {
+		env->DeleteLocalRef(upperCased);
+		env->DeleteLocalRef(javaString);
+		return utf8String;
+	} else {
+		const std::string result = AndroidUtil::fromJavaString(env, upperCased);
+		env->DeleteLocalRef(upperCased);
+		env->DeleteLocalRef(javaString);
+		return result;
+	}
 }

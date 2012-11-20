@@ -17,12 +17,13 @@
  * 02110-1301, USA.
  */
 
-#include <string.h>
+#include <cstring>
 
 #include <algorithm>
 
 #include <ZLFile.h>
 #include <ZLInputStream.h>
+#include <ZLStringUtil.h>
 #include <ZLUnicodeUtil.h>
 
 #include "ZLAsynchronousInputStream.h"
@@ -38,7 +39,7 @@ public:
 
 	void initialize(const char *encoding);
 	void shutdown();
-	bool handleBuffer(const char *data, size_t len);
+	bool handleBuffer(const char *data, std::size_t len);
 
 private:
 	ZLXMLReader &myReader;
@@ -55,14 +56,11 @@ void ZLXMLReaderHandler::shutdown() {
 	myReader.shutdown();
 }
 
-bool ZLXMLReaderHandler::handleBuffer(const char *data, size_t len) {
+bool ZLXMLReaderHandler::handleBuffer(const char *data, std::size_t len) {
 	return myReader.readFromBuffer(data, len);
 }
 
-
-
-
-static const size_t BUFFER_SIZE = 2048;
+static const std::size_t BUFFER_SIZE = 2048;
 
 void ZLXMLReader::startElementHandler(const char*, const char**) {
 }
@@ -70,13 +68,10 @@ void ZLXMLReader::startElementHandler(const char*, const char**) {
 void ZLXMLReader::endElementHandler(const char*) {
 }
 
-void ZLXMLReader::characterDataHandler(const char*, size_t) {
+void ZLXMLReader::characterDataHandler(const char*, std::size_t) {
 }
 
-void ZLXMLReader::namespaceListChangedHandler() {
-}
-
-const std::map<std::string,std::string> &ZLXMLReader::namespaces() const {
+const ZLXMLReader::nsMap &ZLXMLReader::namespaces() const {
 	return *myNamespaces.back();
 }
 
@@ -113,7 +108,7 @@ bool ZLXMLReader::readDocument(shared_ptr<ZLInputStream> stream) {
 	}
 	initialize(useWindows1252 ? "windows-1252" : 0);
 
-	size_t length;
+	std::size_t length;
 	do {
 		length = stream->read(myParserBuffer, BUFFER_SIZE);
 		if (!readFromBuffer(myParserBuffer, length)) {
@@ -131,14 +126,14 @@ bool ZLXMLReader::readDocument(shared_ptr<ZLInputStream> stream) {
 void ZLXMLReader::initialize(const char *encoding) {
 	myInternalReader->init(encoding);
 	myInterrupted = false;
-	myNamespaces.push_back(new std::map<std::string, std::string>());
+	myNamespaces.push_back(new nsMap());
 }
 
 void ZLXMLReader::shutdown() {
 	myNamespaces.clear();
 }
 
-bool ZLXMLReader::readFromBuffer(const char *data, size_t len) {
+bool ZLXMLReader::readFromBuffer(const char *data, std::size_t len) {
 	return myInternalReader->parseBuffer(data, len);
 }
 
@@ -183,13 +178,17 @@ ZLXMLReader::NamespaceAttributeNamePredicate::NamespaceAttributeNamePredicate(co
 }
 
 bool ZLXMLReader::NamespaceAttributeNamePredicate::accepts(const ZLXMLReader &reader, const char *name) const {
-	const std::map<std::string,std::string> &namespaces = reader.namespaces();
-	for (std::map<std::string,std::string>::const_iterator it = namespaces.begin(); it != namespaces.end(); ++it) {
-		if (it->second == myNamespaceName) {
-			return it->first + ':' + myAttributeName == name;
-		}
-	}
-	return false;
+	const std::string full(name);
+	const std::size_t index = full.find(':');
+	const std::string namespaceId =
+		index == std::string::npos ? std::string() : full.substr(0, index);
+
+	const nsMap &namespaces = reader.namespaces();
+	nsMap::const_iterator it = namespaces.find(namespaceId);
+	return
+		it != namespaces.end() &&
+		it->second == myNamespaceName &&
+		full.substr(index + 1) == myAttributeName;
 }
 
 const char *ZLXMLReader::attributeValue(const char **xmlattributes, const AttributeNamePredicate &predicate) {
@@ -207,6 +206,25 @@ const char *ZLXMLReader::attributeValue(const char **xmlattributes, const Attrib
 	return 0;
 }
 
+bool ZLXMLReader::testTag(const std::string &ns, const std::string &name, const std::string &tag) const {
+	const nsMap &nspaces = namespaces();
+
+	if (name == tag) {
+		const nsMap::const_iterator it = nspaces.find(std::string());
+		return it != nspaces.end() && ns == it->second;
+	}
+	const int nameLen = name.size();
+	const int tagLen = tag.size();
+	if (tagLen < nameLen + 2) {
+		return false;
+	}
+	if (ZLStringUtil::stringEndsWith(tag, name) && tag[tagLen - nameLen - 1] == ':') {
+		const nsMap::const_iterator it = nspaces.find(tag.substr(0, tagLen - nameLen - 1));
+		return it != nspaces.end() && ns == it->second;
+	}
+	return false;
+}
+
 bool ZLXMLReader::readDocument(shared_ptr<ZLAsynchronousInputStream> stream) {
 	ZLXMLReaderHandler handler(*this);
 	return stream->processInput(handler);
@@ -219,4 +237,8 @@ const std::string &ZLXMLReader::errorMessage() const {
 void ZLXMLReader::setErrorMessage(const std::string &message) {
 	myErrorMessage = message;
 	interrupt();
+}
+
+std::size_t ZLXMLReader::getCurrentPosition() const {
+	return myInternalReader != 0 ? myInternalReader->getCurrentPosition() : (std::size_t)-1;
 }

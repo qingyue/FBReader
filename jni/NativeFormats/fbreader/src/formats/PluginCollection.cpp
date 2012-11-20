@@ -18,6 +18,7 @@
  */
 
 #include <AndroidUtil.h>
+#include <JniEnvelope.h>
 
 #include <ZLibrary.h>
 #include <ZLFile.h>
@@ -26,26 +27,24 @@
 
 #include "../library/Book.h"
 
-//#include "fb2/FB2Plugin.h"
-////#include "docbook/DocBookPlugin.h"
-//#include "html/HtmlPlugin.h"
+#include "fb2/FB2Plugin.h"
+#include "html/HtmlPlugin.h"
 #include "txt/TxtPlugin.h"
 //#include "pdb/PdbPlugin.h"
 //#include "tcr/TcrPlugin.h"
-//#include "oeb/OEBPlugin.h"
+#include "oeb/OEBPlugin.h"
 //#include "chm/CHMPlugin.h"
-//#include "rtf/RtfPlugin.h"
+#include "rtf/RtfPlugin.h"
 //#include "openreader/OpenReaderPlugin.h"
-////#include "pdf/PdfPlugin.h"
+#include "doc/DocPlugin.h"
 
 PluginCollection *PluginCollection::ourInstance = 0;
 
 PluginCollection &PluginCollection::Instance() {
 	if (ourInstance == 0) {
 		ourInstance = new PluginCollection();
-		//ourInstance->myPlugins.push_back(new FB2Plugin());
-//		//ourInstance->myPlugins.push_back(new DocBookPlugin());
-		//ourInstance->myPlugins.push_back(new HtmlPlugin());
+		ourInstance->myPlugins.push_back(new FB2Plugin());
+		ourInstance->myPlugins.push_back(new HtmlPlugin());
 		ourInstance->myPlugins.push_back(new TxtPlugin());
 //		ourInstance->myPlugins.push_back(new PluckerPlugin());
 //		ourInstance->myPlugins.push_back(new PalmDocPlugin());
@@ -54,10 +53,10 @@ PluginCollection &PluginCollection::Instance() {
 //		ourInstance->myPlugins.push_back(new ZTXTPlugin());
 //		ourInstance->myPlugins.push_back(new TcrPlugin());
 //		ourInstance->myPlugins.push_back(new CHMPlugin());
-		//ourInstance->myPlugins.push_back(new OEBPlugin());
-		//ourInstance->myPlugins.push_back(new RtfPlugin());
+		ourInstance->myPlugins.push_back(new OEBPlugin());
+		ourInstance->myPlugins.push_back(new RtfPlugin());
+		ourInstance->myPlugins.push_back(new DocPlugin());
 //		ourInstance->myPlugins.push_back(new OpenReaderPlugin());
-//		//ourInstance->myPlugins.push_back(new PdfPlugin());
 	}
 	return *ourInstance;
 }
@@ -71,11 +70,9 @@ void PluginCollection::deleteInstance() {
 
 PluginCollection::PluginCollection() {
 	JNIEnv *env = AndroidUtil::getEnv();
-	jclass cls = env->FindClass(AndroidUtil::Class_PluginCollection);
-	jobject instance = env->CallStaticObjectMethod(cls, AndroidUtil::SMID_PluginCollection_Instance);
+	jobject instance = AndroidUtil::StaticMethod_PluginCollection_Instance->call();
 	myJavaInstance = env->NewGlobalRef(instance);
 	env->DeleteLocalRef(instance);
-	env->DeleteLocalRef(cls);
 }
 
 PluginCollection::~PluginCollection() {
@@ -94,12 +91,4 @@ shared_ptr<FormatPlugin> PluginCollection::pluginByType(const std::string &fileT
 
 bool PluginCollection::isLanguageAutoDetectEnabled() {
 	return true;
-}
-
-std::string PluginCollection::defaultLanguage() {
-	return "en";
-}
-
-std::string PluginCollection::defaultEncoding() {
-	return "windows-1252";
 }

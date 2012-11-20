@@ -74,7 +74,8 @@ public:
 
 	const std::string &errorMessage() const;
 
-	const std::map<std::string,std::string> &namespaces() const;
+	typedef std::map<std::string,std::string> nsMap;
+	const nsMap &namespaces() const;
 
 	const char *attributeValue(const char **xmlattributes, const char *name);
 	const char *attributeValue(const char **xmlattributes, const AttributeNamePredicate &predicate);
@@ -82,18 +83,19 @@ public:
 private:
 	void initialize(const char *encoding = 0);
 	void shutdown();
-	bool readFromBuffer(const char *data, size_t len);
+	bool readFromBuffer(const char *data, std::size_t len);
 
 protected:
 	virtual void startElementHandler(const char *tag, const char **attributes);
 	virtual void endElementHandler(const char *tag);
-	virtual void characterDataHandler(const char *text, size_t len);
+	virtual void characterDataHandler(const char *text, std::size_t len);
 	virtual bool processNamespaces() const;
-	virtual void namespaceListChangedHandler();
 	virtual const std::vector<std::string> &externalDTDs() const;
 	virtual void collectExternalEntities(std::map<std::string,std::string> &entityMap);
 
+	bool testTag(const std::string &ns, const std::string &name, const std::string &tag) const;
 	bool isInterrupted() const;
+	std::size_t getCurrentPosition() const;
 
 protected:
 	void interrupt();
@@ -103,7 +105,7 @@ private:
 	bool myInterrupted;
 	ZLXMLReaderInternal *myInternalReader;
 	char *myParserBuffer;
-	std::vector<shared_ptr<std::map<std::string,std::string> > > myNamespaces;
+	std::vector<shared_ptr<nsMap> > myNamespaces;
 
 	std::string myErrorMessage;
 

@@ -19,10 +19,8 @@
 
 package org.geometerplus.fbreader.library;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 import org.geometerplus.zlibrary.text.view.ZLTextElement;
 import org.geometerplus.zlibrary.text.view.ZLTextFixedPosition;
@@ -35,16 +33,6 @@ public final class Bookmark extends ZLTextFixedPosition {
 	public final static int MODIFICATION = 1;
 	public final static int ACCESS = 2;
 	public final static int LATEST = 3;
-
-	public static List<Bookmark> bookmarks() {
-		return BooksDatabase.Instance().loadAllVisibleBookmarks();
-	}
-
-	public static List<Bookmark> invisibleBookmarks(Book book) {
-		final List<Bookmark> list = BooksDatabase.Instance().loadBookmarks(book.getId(), false);
-		Collections.sort(list, new ByTimeComparator());
-		return list;
-	}
 
 	private long myId;
 	private final long myBookId;

@@ -11,6 +11,7 @@ import org.geometerplus.android.util.UIUtil;
 import org.geometerplus.fbreader.fbreader.FBReaderApp;
 import org.geometerplus.fbreader.library.Book;
 import org.geometerplus.fbreader.library.Bookmark;
+import org.geometerplus.fbreader.library.Library;
 
 import android.annotation.SuppressLint;
 
@@ -41,9 +42,9 @@ public class ShowDialogBookmarksAction extends FBAndroidAction
         ArrayList<BookmarkItem> bookmarks = new ArrayList<BookmarkItem>();
         List<Bookmark> AllBooksBookmarks;
         
-        AllBooksBookmarks = Bookmark.bookmarks();
-        Collections.sort(AllBooksBookmarks, new Bookmark.ByTimeComparator());
         final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
+        AllBooksBookmarks = Library.Instance().invisibleBookmarks(fbreader.Model.Book);
+        Collections.sort(AllBooksBookmarks, new Bookmark.ByTimeComparator());
 
         if (fbreader.Model != null) {
             final long bookId = fbreader.Model.Book.getId();
