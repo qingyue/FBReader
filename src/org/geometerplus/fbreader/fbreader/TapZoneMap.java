@@ -19,12 +19,17 @@
 
 package org.geometerplus.fbreader.fbreader;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import org.geometerplus.zlibrary.core.xml.ZLXMLReaderAdapter;
-import org.geometerplus.zlibrary.core.xml.ZLStringMap;
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
-import org.geometerplus.zlibrary.core.options.*;
+import org.geometerplus.zlibrary.core.options.ZLIntegerRangeOption;
+import org.geometerplus.zlibrary.core.options.ZLStringListOption;
+import org.geometerplus.zlibrary.core.options.ZLStringOption;
+import org.geometerplus.zlibrary.core.xml.ZLStringMap;
+import org.geometerplus.zlibrary.core.xml.ZLXMLReaderAdapter;
 
 
 public class TapZoneMap {
@@ -85,19 +90,6 @@ public class TapZoneMap {
 		doubleTap
 	};
 
-//<<<<<<< HEAD
-//	private int myVerticalSize = 3;
-//	private int myHorizontalSize = 3;
-//	private final HashMap<Zone,String> myZoneMap = new HashMap<Zone,String>();
-//	private final HashMap<Zone,String> myZoneMap2 = new HashMap<Zone,String>();
-//
-//	TapZoneMap(int v, int h) {
-//		myVerticalSize = 1;
-//		myHorizontalSize = h;
-//	}
-//
-//	TapZoneMap(String name) {
-//=======
     public final String Name;
     private final String myOptionGroupName;
 	private ZLIntegerRangeOption myHeight;
@@ -110,7 +102,7 @@ public class TapZoneMap {
 		myOptionGroupName = "TapZones:" + name;
 		myHeight = new ZLIntegerRangeOption(myOptionGroupName, "Height", 2, 5, 3);
 		myWidth = new ZLIntegerRangeOption(myOptionGroupName, "Width", 2, 5, 3);
-//>>>>>>> origin/master
+
 		final ZLFile mapFile = ZLFile.createFileByPath(
 			"default/tapzones/" + name.toLowerCase() + ".xml"
 		);
@@ -141,35 +133,27 @@ public class TapZoneMap {
 		return option != null ? option.getValue() : null;
 	}
 
-    private ZLStringOption getOptionByZone(Zone zone, Tap tap) {
-		switch (tap) {
-            default:
-                return null;
-			case singleTap:
-//<<<<<<< HEAD
-			{
-//				final String action = myZoneMap.get(zone);
-//				return action != null ? action : "showdialogmenu";
-
-			    final ZLStringOption option = myZoneMap.get(zone);
-                return option != null ? option : new ZLStringOption(myOptionGroupName, "showdialogmenu", null);
-			}
-//=======
-//            {
-//				final ZLStringOption option = myZoneMap.get(zone);
-//                return option != null ? option : myZoneMap2.get(zone);
-//            }
-//>>>>>>> origin/master
-			case singleNotDoubleTap:
-			{
-			    return myZoneMap.get(zone);
-			}
-			case doubleTap:
-			{
-			    return myZoneMap2.get(zone);
-			}
-		}
-    }
+	private ZLStringOption getOptionByZone(Zone zone, Tap tap) {
+	    switch (tap) {
+	    default:
+	        return null;
+	    case singleTap:
+	    {
+	        final ZLStringOption option = myZoneMap.get(zone);
+	        ZLStringOption showMenuOption = new ZLStringOption(myOptionGroupName, "showdialogmenu", null);
+	        showMenuOption.setValue("showdialogmenu");
+	        return option != null ? option : showMenuOption;
+	    }
+	    case singleNotDoubleTap:
+	    {
+	        return myZoneMap.get(zone);
+	    }
+	    case doubleTap:
+	    {
+	        return myZoneMap2.get(zone);
+	    }
+	    }
+	}
 
     private ZLStringOption createOptionForZone(Zone zone, boolean singleTap, String action) {
         return new ZLStringOption(
