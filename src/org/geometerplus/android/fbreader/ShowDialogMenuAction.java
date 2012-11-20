@@ -175,11 +175,9 @@ public class ShowDialogMenuAction extends FBAndroidAction
             public void rotationScreen(int i)
             {
                 if (i == -1) {
-//                    ZLApplication.Instance().doAction(ActionCode.SET_SCREEN_ORIENTATION_LANDSCAPE);
                     ZLApplication.Instance().runAction(ActionCode.SET_SCREEN_ORIENTATION_LANDSCAPE);
                 }
                 else {
-//                    ZLApplication.Instance().doAction(ActionCode.SET_SCREEN_ORIENTATION_PORTRAIT);
                     ZLApplication.Instance().runAction(ActionCode.SET_SCREEN_ORIENTATION_PORTRAIT);
                 }
             }
@@ -187,7 +185,6 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void previousPage()
             {
-//                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_BACK);
                 ZLApplication.Instance().runAction(ActionCode.TURN_PAGE_BACK);
                 updatePage();
             }
@@ -195,7 +192,6 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void nextPage()
             {
-//                ZLApplication.Instance().doAction(ActionCode.TURN_PAGE_FORWARD);
                 ZLApplication.Instance().runAction(ActionCode.TURN_PAGE_FORWARD);
                 updatePage();
             }
@@ -203,7 +199,6 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void increaseFontSize()
             {
-//                ZLApplication.Instance().doAction(ActionCode.INCREASE_FONT);
                 ZLApplication.Instance().runAction(ActionCode.INCREASE_FONT);
             }
             
@@ -243,7 +238,6 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void decreaseFontSize()
             {
-//                ZLApplication.Instance().doAction(ActionCode.DECREASE_FONT);
                 ZLApplication.Instance().runAction(ActionCode.DECREASE_FONT);
             }
             
@@ -426,7 +420,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
     {
         final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
         ArrayList<DirectoryItem> bookmarks = new ArrayList<DirectoryItem>();
-        List<Bookmark>allBooksBookmarks = Library.Instance().invisibleBookmarks(fbreader.Model.Book);
+        List<Bookmark>allBooksBookmarks = Library.Instance().allBookmarks();
         Collections.sort(allBooksBookmarks, new Bookmark.ByTimeComparator());
 
         if (fbreader.Model != null) {

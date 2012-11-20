@@ -270,7 +270,6 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		canvas.drawBitmap(myFooterBitmap, 0, getHeight() - footer.getHeight(), myPaint);
 	}
 
-//<<<<<<< HEAD
 	private final int mBookmarkY = 10;
 	private int mBookmarkX = 0;
 	private final int mMargins = 10;
@@ -282,7 +281,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	        mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star_cancel);
 	        mBookmarkX = ZLAndroidWidget.this.getWidth() - mBookmarkBitmap.getWidth() - mMargins;
 	        if (bookmarkAdd != null) {
-	            for (Bookmark bookmark : Library.Instance().invisibleBookmarks(fbreader.Model.Book)) {
+	            for (Bookmark bookmark : Library.Instance().allBookmarks()) {
 	                if (bookmark.getText().equals(bookmarkAdd.getText())) {
 	                    mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
 	                    break;
@@ -310,15 +309,12 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	
 	private void onDrawStatic(final Canvas canvas) {
 	    Log.d(TAG, "onDrawStatic");
-//=======
-//	private void onDrawStatic(final Canvas canvas) {
-//>>>>>>> origin/master
 		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
 		drawBookmarkIcon(canvas);
 		drawFooter(canvas);
 //<<<<<<< HEAD
-		ZLApplication.Instance().ChangePage();
+//		ZLApplication.Instance().ChangePage();
 //=======
 		new Thread() {
 			@Override
@@ -409,7 +405,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 						        final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
 						        final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
 						        if (bookmarkAdd != null) {
-						            for (Bookmark bookmark : Library.Instance().invisibleBookmarks(fbreader.Model.Book)) {
+						            for (Bookmark bookmark : Library.Instance().allBookmarks()) {
 						                if (bookmark.getText().equals(bookmarkAdd.getText())) {
 						                    bookmark.delete();
 						                    ZLAndroidWidget.this.invalidate();
