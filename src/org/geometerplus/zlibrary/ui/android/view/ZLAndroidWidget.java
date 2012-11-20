@@ -313,9 +313,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
 		drawBookmarkIcon(canvas);
 		drawFooter(canvas);
-//<<<<<<< HEAD
-//		ZLApplication.Instance().ChangePage();
-//=======
+
 		new Thread() {
 			@Override
 			public void run() {
@@ -329,7 +327,6 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 				view.preparePage(context, ZLView.PageIndex.next);
 			}
 		}.start();
-//>>>>>>> origin/master
 	}
 
 	@Override
