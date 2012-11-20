@@ -29,6 +29,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 import com.onyx.android.sdk.ui.data.DirectoryItem;
+import com.onyx.android.sdk.ui.dialog.AnnotationItem;
 import com.onyx.android.sdk.ui.dialog.DialogDirectory;
 import com.onyx.android.sdk.ui.dialog.DialogDirectory.DirectoryTab;
 import com.onyx.android.sdk.ui.dialog.DialogFontFaceSettings;
@@ -444,7 +445,7 @@ public class ShowDialogMenuAction extends FBAndroidAction
             }
         }
 
-        ArrayList<DirectoryItem> annotationItems = new ArrayList<DirectoryItem>();
+        ArrayList<AnnotationItem> annotationItems = new ArrayList<AnnotationItem>();
 
         DialogDirectory.IGotoPageHandler gotoPageHandler = new DialogDirectory.IGotoPageHandler()
         {
