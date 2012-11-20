@@ -22,15 +22,15 @@ package org.geometerplus.fbreader.formats;
 import java.util.*;
 
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.filetypes.*;
 
 import org.geometerplus.fbreader.formats.fb2.FB2Plugin;
 import org.geometerplus.fbreader.formats.oeb.OEBPlugin;
 import org.geometerplus.fbreader.formats.pdb.MobipocketPlugin;
-import org.geometerplus.fbreader.filetype.*;
 
 public class PluginCollection {
 	static {
-		System.loadLibrary("NativeFormats-v1");
+		System.loadLibrary("NativeFormats-v2");
 	}
 
 	private static PluginCollection ourInstance;
@@ -88,9 +88,9 @@ public class PluginCollection {
 		}
 
 		if (formatType == FormatPlugin.Type.ANY) {
-			FormatPlugin p = getPlugin(fileType, FormatPlugin.Type.JAVA);
+			FormatPlugin p = getPlugin(fileType, FormatPlugin.Type.NATIVE);
 			if (p == null) {
-				p = getPlugin(fileType, FormatPlugin.Type.NATIVE);
+				p = getPlugin(fileType, FormatPlugin.Type.JAVA);
 			}
 			return p;
 		} else {

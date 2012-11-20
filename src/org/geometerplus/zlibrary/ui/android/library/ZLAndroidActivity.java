@@ -251,7 +251,10 @@ public abstract class ZLAndroidActivity extends Activity {
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
-		ZLApplication.Instance().openFile(fileFromIntent(intent), null);
+		final String action = intent.getAction();
+		if (Intent.ACTION_VIEW.equals(action) || "android.fbreader.action.VIEW".equals(action)) {
+			ZLApplication.Instance().openFile(fileFromIntent(intent), null);
+		}
 	}
 
 	private static ZLAndroidLibrary getLibrary() {
@@ -260,14 +263,14 @@ public abstract class ZLAndroidActivity extends Activity {
 	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		View view = findViewById(R.id.main_view);
-		return ((view != null) && view.onKeyDown(keyCode, event)) || super.onKeyDown(keyCode, event);
+		final View view = findViewById(R.id.main_view);
+		return (view != null && view.onKeyDown(keyCode, event)) || super.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		View view = findViewById(R.id.main_view);
-		return ((view != null) && view.onKeyUp(keyCode, event)) || super.onKeyUp(keyCode, event);
+		final View view = findViewById(R.id.main_view);
+		return (view != null && view.onKeyUp(keyCode, event)) || super.onKeyUp(keyCode, event);
 	}
 
 	BroadcastReceiver myBatteryInfoReceiver = new BroadcastReceiver() {

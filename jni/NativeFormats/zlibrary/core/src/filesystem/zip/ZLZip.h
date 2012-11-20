@@ -30,10 +30,15 @@
 class ZLZDecompressor;
 class ZLFile;
 
-class ZLZipEntryCache : public ZLUserData {
+class ZLZipEntryCache {
 
 public:
-	static const ZLZipEntryCache &cache(ZLInputStream &baseStream);
+	static shared_ptr<ZLZipEntryCache> cache(const std::string &containerName, ZLInputStream &containerStream);
+
+private:
+	static const std::size_t ourStorageSize;
+	static shared_ptr<ZLZipEntryCache> *ourStoredCaches;
+	static std::size_t ourIndex;
 
 public:
 	struct Info {
@@ -45,38 +50,42 @@ public:
 		int UncompressedSize;
 	};
 
+private:
+	ZLZipEntryCache(const std::string &containerName, ZLInputStream &containerStream);
+
 public:
-	ZLZipEntryCache(ZLInputStream &baseStream);
 	Info info(const std::string &entryName) const;
 	void collectFileNames(std::vector<std::string> &names) const;
 
 private:
+	const std::string myContainerName;
 	std::map<std::string,Info> myInfoMap;
 };
 
 class ZLZipInputStream : public ZLInputStream {
 
 private:
-	ZLZipInputStream(shared_ptr<ZLInputStream> &base, const std::string &entryName);
+	ZLZipInputStream(shared_ptr<ZLInputStream> &base, const std::string &baseName, const std::string &entryName);
 
 public:
 	~ZLZipInputStream();
 	bool open();
-	size_t read(char *buffer, size_t maxSize);
+	std::size_t read(char *buffer, std::size_t maxSize);
 	void close();
 
 	void seek(int offset, bool absoluteOffset);
-	size_t offset() const;
-	size_t sizeOfOpened();
+	std::size_t offset() const;
+	std::size_t sizeOfOpened();
 
 private:
 	shared_ptr<ZLInputStream> myBaseStream;
+	std::string myBaseName;
 	std::string myEntryName;
 	bool myIsDeflated;
 
-	size_t myUncompressedSize;
-	size_t myAvailableSize;
-	size_t myOffset;
+	std::size_t myUncompressedSize;
+	std::size_t myAvailableSize;
+	std::size_t myOffset;
 
 	shared_ptr<ZLZDecompressor> myDecompressor;
 
@@ -91,18 +100,18 @@ private:
 public:
 	~ZLGzipInputStream();
 	bool open();
-	size_t read(char *buffer, size_t maxSize);
+	std::size_t read(char *buffer, std::size_t maxSize);
 	void close();
 
 	void seek(int offset, bool absoluteOffset);
-	size_t offset() const;
-	size_t sizeOfOpened();
+	std::size_t offset() const;
+	std::size_t sizeOfOpened();
 
 private:
 	shared_ptr<ZLInputStream> myBaseStream;
-	size_t myFileSize;
+	std::size_t myFileSize;
 
-	size_t myOffset;
+	std::size_t myOffset;
 
 	shared_ptr<ZLZDecompressor> myDecompressor;
 
@@ -116,7 +125,7 @@ private:
 
 public:
 	~ZLZipDir();
-	void collectSubDirs(std::vector<std::string>&, bool);
+	//void collectSubDirs(std::vector<std::string>&, bool);
 	void collectFiles(std::vector<std::string> &names, bool includeSymlinks);
 
 protected:
@@ -127,6 +136,6 @@ friend class ZLFile;
 
 inline ZLZipDir::ZLZipDir(const std::string &name) : ZLDir(name) {}
 inline ZLZipDir::~ZLZipDir() {}
-inline void ZLZipDir::collectSubDirs(std::vector<std::string>&, bool) {}
+//inline void ZLZipDir::collectSubDirs(std::vector<std::string>&, bool) {}
 
 #endif /* __ZLZIP_H__ */

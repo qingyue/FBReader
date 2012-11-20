@@ -17,10 +17,9 @@
  * 02110-1301, USA.
  */
 
-#include <jni.h>
-
 #include <ZLStringUtil.h>
 #include <AndroidUtil.h>
+#include <JniEnvelope.h>
 
 #include "ZLAndroidFSManager.h"
 
@@ -84,16 +83,16 @@ ZLFileInfo ZLAndroidFSManager::fileInfo(const std::string &path) const {
 	ZLFileInfo info;
 
 	JNIEnv *env = AndroidUtil::getEnv();
-	jobject javaFile = AndroidUtil::createZLFile(env, path);
+	jobject javaFile = AndroidUtil::createJavaFile(env, path);
 	if (javaFile == 0) {
 		return info;
 	}
 
-	info.IsDirectory = env->CallBooleanMethod(javaFile, AndroidUtil::MID_ZLFile_isDirectory);
-	const jboolean exists = env->CallBooleanMethod(javaFile, AndroidUtil::MID_ZLFile_exists);
+	info.IsDirectory = AndroidUtil::Method_ZLFile_isDirectory->call(javaFile);
+	const jboolean exists = AndroidUtil::Method_ZLFile_exists->call(javaFile);
 	if (exists) {
 		info.Exists = true;
-		info.Size = env->CallLongMethod(javaFile, AndroidUtil::MID_ZLFile_size);
+		info.Size = AndroidUtil::Method_ZLFile_size->call(javaFile);
 	}
 	env->DeleteLocalRef(javaFile);
 
@@ -104,7 +103,7 @@ std::string ZLAndroidFSManager::resolveSymlink(const std::string &path) const {
 	if (useNativeImplementation(path)) {
 		return ZLUnixFSManager::resolveSymlink(path);
 	}
-	return std::string();
+	return path;
 }
 
 ZLFSDir *ZLAndroidFSManager::createNewDirectory(const std::string &path) const {

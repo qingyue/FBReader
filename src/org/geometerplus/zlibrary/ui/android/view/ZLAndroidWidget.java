@@ -22,6 +22,7 @@ package org.geometerplus.zlibrary.ui.android.view;
 import org.geometerplus.fbreader.fbreader.ActionCode;
 import org.geometerplus.fbreader.fbreader.FBReaderApp;
 import org.geometerplus.fbreader.library.Bookmark;
+import org.geometerplus.fbreader.library.Library;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
@@ -280,7 +281,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	        mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star_cancel);
 	        mBookmarkX = ZLAndroidWidget.this.getWidth() - mBookmarkBitmap.getWidth() - mMargins;
 	        if (bookmarkAdd != null) {
-	            for (Bookmark bookmark : Bookmark.bookmarks()) {
+	            for (Bookmark bookmark : Library.Instance().allBookmarks()) {
 	                if (bookmark.getText().equals(bookmarkAdd.getText())) {
 	                    mBookmarkBitmap = BitmapFactory.decodeResource(res, R.drawable.star);
 	                    break;
@@ -306,13 +307,26 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	    }
 	}
 	
-	private void onDrawStatic(Canvas canvas) {
+	private void onDrawStatic(final Canvas canvas) {
 	    Log.d(TAG, "onDrawStatic");
 		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
 		canvas.drawBitmap(myBitmapManager.getBitmap(ZLView.PageIndex.current), 0, 0, myPaint);
 		drawBookmarkIcon(canvas);
 		drawFooter(canvas);
-		ZLApplication.Instance().ChangePage();
+
+		new Thread() {
+			@Override
+			public void run() {
+				final ZLView view = ZLApplication.Instance().getCurrentView();
+				final ZLAndroidPaintContext context = new ZLAndroidPaintContext(
+					canvas,
+					getWidth(),
+					getMainAreaHeight(),
+					view.isScrollbarShown() ? getVerticalScrollbarWidth() : 0
+				);
+				view.preparePage(context, ZLView.PageIndex.next);
+			}
+		}.start();
 	}
 
 	@Override
@@ -337,13 +351,13 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	private volatile boolean myLongClickPerformed;
 
 	private void postLongClickRunnable() {
-        myLongClickPerformed = false;
+		myLongClickPerformed = false;
 		myPendingPress = false;
-        if (myPendingLongClickRunnable == null) {
-            myPendingLongClickRunnable = new LongClickRunnable();
-        }
-        postDelayed(myPendingLongClickRunnable, 2 * ViewConfiguration.getLongPressTimeout());
-    }
+		if (myPendingLongClickRunnable == null) {
+			myPendingLongClickRunnable = new LongClickRunnable();
+		}
+		postDelayed(myPendingLongClickRunnable, 2 * ViewConfiguration.getLongPressTimeout());
+	}
 
 	private class ShortClickRunnable implements Runnable {
 		public void run() {
@@ -378,17 +392,17 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 					}
 					if (myPendingPress) {
 						if (view.isDoubleTapSupported()) {
-        					if (myPendingShortClickRunnable == null) {
-            					myPendingShortClickRunnable = new ShortClickRunnable();
-        					}
-        					postDelayed(myPendingShortClickRunnable, ViewConfiguration.getDoubleTapTimeout());
+							if (myPendingShortClickRunnable == null) {
+								myPendingShortClickRunnable = new ShortClickRunnable();
+							}
+							postDelayed(myPendingShortClickRunnable, ViewConfiguration.getDoubleTapTimeout());
 						} else {
 						    if(mBookmarkBitmap != null && x >= mBookmarkX && x <= mBookmarkX + mBookmarkBitmap.getWidth() && 
 						            y >= mBookmarkY && y <= mBookmarkY + mBookmarkBitmap.getHeight()) {
 						        final FBReaderApp fbreader = (FBReaderApp)FBReaderApp.Instance();
 						        final Bookmark bookmarkAdd = fbreader.addBookmark(20, true);
 						        if (bookmarkAdd != null) {
-						            for (Bookmark bookmark : Bookmark.bookmarks()) {
+						            for (Bookmark bookmark : Library.Instance().allBookmarks()) {
 						                if (bookmark.getText().equals(bookmarkAdd.getText())) {
 						                    bookmark.delete();
 						                    ZLAndroidWidget.this.invalidate();
@@ -396,7 +410,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 						                }
 						            }
 						        }
-						        ZLApplication.Instance().doAction(ActionCode.ADD_BOOKMARK);
+						        ZLApplication.Instance().runAction(ActionCode.ADD_BOOKMARK);
 						        ZLAndroidWidget.this.invalidate();
 						    } else {
 			                    view.onFingerSingleTap(x, y);
@@ -483,7 +497,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 				myTrackingStartTime = System.currentTimeMillis();
 				return true;
 			} else {
-				return application.doActionByKey(keyCode, false);
+				return application.runActionByKey(keyCode, false);
 			}
 		} else {
 			return false;
@@ -495,7 +509,7 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 			if (myKeyUnderTracking == keyCode) {
 				final boolean longPress = System.currentTimeMillis() >
 					myTrackingStartTime + ViewConfiguration.getLongPressTimeout();
-				ZLApplication.Instance().doActionByKey(keyCode, longPress);
+				ZLApplication.Instance().runActionByKey(keyCode, longPress);
 			}
 			myKeyUnderTracking = -1;
 			return true;

@@ -25,92 +25,139 @@
 #include <string>
 #include <vector>
 
+#include <shared_ptr.h>
+
+class JavaClass;
+class JavaArray;
+class Constructor;
+class ObjectField;
+class VoidMethod;
+class IntMethod;
+class LongMethod;
+class BooleanMethod;
+class StringMethod;
+class ObjectMethod;
+class ObjectArrayMethod;
+class StaticObjectMethod;
+
+class ZLFile;
+class ZLFileImage;
+
 class AndroidUtil {
 
 private:
 	static JavaVM *ourJavaVM;
 
 public:
-	static const char * const Class_java_lang_System;
-	static const char * const Class_java_util_Collection;
-	static const char * const Class_java_util_Locale;
-	static const char * const Class_java_io_InputStream;
-	static const char * const Class_java_io_PrintStream;
-	static const char * const Class_ZLibrary;
-	static const char * const Class_ZLFile;
-	static const char * const Class_NativeFormatPlugin;
-	static const char * const Class_PluginCollection;
-	static const char * const Class_Paths;
-	static const char * const Class_Book;
-	static const char * const Class_Tag;
-	static const char * const Class_NativeBookModel;
+	static JavaClass Class_java_lang_Object;
+	static JavaArray Array_java_lang_Object;
+	static JavaClass Class_java_lang_RuntimeException;
+	static JavaClass Class_java_lang_String;
+	static JavaClass Class_java_util_Collection;
+	static JavaClass Class_java_util_List;
+	static JavaClass Class_java_util_Locale;
+	static JavaClass Class_java_io_InputStream;
+	static JavaClass Class_ZLibrary;
+	static JavaClass Class_ZLFile;
+	static JavaClass Class_ZLFileImage;
+	static JavaClass Class_ZLTextModel;
+	static JavaClass Class_CachedCharStorageException;
+	static JavaClass Class_NativeFormatPlugin;
+	static JavaClass Class_PluginCollection;
+	static JavaClass Class_Encoding;
+	static JavaClass Class_EncodingConverter;
+	static JavaClass Class_JavaEncodingCollection;
+	static JavaClass Class_Paths;
+	static JavaClass Class_Book;
+	static JavaClass Class_Tag;
+	static JavaClass Class_NativeBookModel;
+	//static JavaClass Class_BookReadingException;
 
-	static jobject OBJECT_java_lang_System_err;
+	static shared_ptr<StringMethod> Method_java_lang_String_toLowerCase;
+	static shared_ptr<StringMethod> Method_java_lang_String_toUpperCase;
 
-	static jmethodID MID_java_util_Collection_toArray;
+	static shared_ptr<ObjectArrayMethod> Method_java_util_Collection_toArray;
 
-	static jmethodID SMID_java_util_Locale_getDefault;
-	static jmethodID MID_java_util_Locale_getLanguage;
+	static shared_ptr<StaticObjectMethod> StaticMethod_java_util_Locale_getDefault;
+	static shared_ptr<StringMethod> Method_java_util_Locale_getLanguage;
 
-	static jmethodID MID_java_io_InputStream_close;
-	static jmethodID MID_java_io_InputStream_read;
-	static jmethodID MID_java_io_InputStream_skip;
+	static shared_ptr<VoidMethod> Method_java_io_InputStream_close;
+	static shared_ptr<IntMethod> Method_java_io_InputStream_read;
+	static shared_ptr<LongMethod> Method_java_io_InputStream_skip;
 
-	static jmethodID MID_java_io_PrintStream_println;
+	static shared_ptr<StaticObjectMethod> StaticMethod_ZLibrary_Instance;
+	static shared_ptr<StringMethod> Method_ZLibrary_getVersionName;
 
-	static jmethodID SMID_ZLibrary_Instance;
-	static jmethodID MID_ZLibrary_getVersionName;
+	static shared_ptr<StaticObjectMethod> StaticMethod_ZLFile_createFileByPath;
+	static shared_ptr<ObjectMethod> Method_ZLFile_children;
+	static shared_ptr<BooleanMethod> Method_ZLFile_exists;
+	static shared_ptr<ObjectMethod> Method_ZLFile_getInputStream;
+	static shared_ptr<StringMethod> Method_ZLFile_getPath;
+	static shared_ptr<BooleanMethod> Method_ZLFile_isDirectory;
+	static shared_ptr<LongMethod> Method_ZLFile_size;
 
-	static jmethodID SMID_ZLFile_createFileByPath;
-	static jmethodID MID_ZLFile_children;
-	static jmethodID MID_ZLFile_exists;
-	static jmethodID MID_ZLFile_getInputStream;
-	static jmethodID MID_ZLFile_getPath;
-	static jmethodID MID_ZLFile_isDirectory;
-	static jmethodID MID_ZLFile_size;
+	static shared_ptr<Constructor> Constructor_ZLFileImage;
 
-	static jmethodID MID_NativeFormatPlugin_init;
-	static jmethodID MID_NativeFormatPlugin_supportedFileType;
+	static shared_ptr<StaticObjectMethod> StaticMethod_NativeFormatPlugin_create;
+	static shared_ptr<StringMethod> Method_NativeFormatPlugin_supportedFileType;
 
-	static jmethodID SMID_PluginCollection_Instance;
+	static shared_ptr<StaticObjectMethod> StaticMethod_PluginCollection_Instance;
 
-	static jmethodID SMID_Paths_cacheDirectory;
+	static shared_ptr<ObjectMethod> Method_Encoding_createConverter;
 
-	static jfieldID FID_Book_File;
-	static jmethodID MID_Book_getTitle;
-	static jmethodID MID_Book_getLanguage;
-	static jmethodID MID_Book_getEncoding;
-	static jmethodID MID_Book_setTitle;
-	static jmethodID MID_Book_setSeriesInfo;
-	static jmethodID MID_Book_setLanguage;
-	static jmethodID MID_Book_setEncoding;
-	static jmethodID MID_Book_addAuthor;
-	static jmethodID MID_Book_addTag;
+	static shared_ptr<ObjectField> Field_EncodingConverter_Name;
+	static shared_ptr<IntMethod> Method_EncodingConverter_convert;
+	static shared_ptr<VoidMethod> Method_EncodingConverter_reset;
 
-	static jmethodID SMID_Tag_getTag;
+	static shared_ptr<StaticObjectMethod> StaticMethod_JavaEncodingCollection_Instance;
+	static shared_ptr<ObjectMethod> Method_JavaEncodingCollection_getEncoding_String;
+	static shared_ptr<ObjectMethod> Method_JavaEncodingCollection_getEncoding_int;
+	static shared_ptr<BooleanMethod> Method_JavaEncodingCollection_providesConverterFor;
 
-	static jfieldID FID_NativeBookModel_Book;
-	static jmethodID MID_NativeBookModel_initImageMap;
-	static jmethodID MID_NativeBookModel_initInternalHyperlinks;
-	static jmethodID MID_NativeBookModel_initTOC;
-	static jmethodID MID_NativeBookModel_createTextModel;
-	static jmethodID MID_NativeBookModel_setBookTextModel;
-	static jmethodID MID_NativeBookModel_setFootnoteModel;
+	static shared_ptr<StaticObjectMethod> StaticMethod_Paths_cacheDirectory;
+
+	static shared_ptr<ObjectField> Field_Book_File;
+	static shared_ptr<StringMethod> Method_Book_getTitle;
+	static shared_ptr<StringMethod> Method_Book_getLanguage;
+	static shared_ptr<StringMethod> Method_Book_getEncodingNoDetection;
+	static shared_ptr<VoidMethod> Method_Book_setTitle;
+	static shared_ptr<VoidMethod> Method_Book_setSeriesInfo;
+	static shared_ptr<VoidMethod> Method_Book_setLanguage;
+	static shared_ptr<VoidMethod> Method_Book_setEncoding;
+	static shared_ptr<VoidMethod> Method_Book_addAuthor;
+	static shared_ptr<VoidMethod> Method_Book_addTag;
+	static shared_ptr<BooleanMethod> Method_Book_save;
+
+	static shared_ptr<StaticObjectMethod> StaticMethod_Tag_getTag;
+
+	static shared_ptr<ObjectField> Field_NativeBookModel_Book;
+	static shared_ptr<VoidMethod> Method_NativeBookModel_initInternalHyperlinks;
+	static shared_ptr<VoidMethod> Method_NativeBookModel_addTOCItem;
+	static shared_ptr<VoidMethod> Method_NativeBookModel_leaveTOCItem;
+	static shared_ptr<ObjectMethod> Method_NativeBookModel_createTextModel;
+	static shared_ptr<VoidMethod> Method_NativeBookModel_setBookTextModel;
+	static shared_ptr<VoidMethod> Method_NativeBookModel_setFootnoteModel;
+	static shared_ptr<VoidMethod> Method_NativeBookModel_addImage;
+
+	//static shared_ptr<StaticObjectMethod> StaticMethod_BookReadingException_throwForFile;
 
 public:
 	static bool init(JavaVM* jvm);
 	static JNIEnv *getEnv();
 
-	static jobject createZLFile(JNIEnv *env, const std::string &path);
-	static bool extractJavaString(JNIEnv *env, jstring from, std::string &to);
+	static std::string fromJavaString(JNIEnv *env, jstring from);
 	static jstring createJavaString(JNIEnv* env, const std::string &str);
 	static std::string convertNonUtfString(const std::string &str);
 
-	static jintArray createIntArray(JNIEnv *env, const std::vector<jint> &data);
-	static jbyteArray createByteArray(JNIEnv *env, const std::vector<jbyte> &data);
-	static jobjectArray createStringArray(JNIEnv *env, const std::vector<std::string> &data);
+	static jobject createJavaFile(JNIEnv *env, const std::string &path);
+	static jobject createJavaImage(JNIEnv *env, const ZLFileImage &image);
 
-	static void throwRuntimeException(JNIEnv *env, const std::string &message);
+	static jintArray createJavaIntArray(JNIEnv *env, const std::vector<jint> &data);
+	static jbyteArray createJavaByteArray(JNIEnv *env, const std::vector<jbyte> &data);
+
+	static void throwRuntimeException(const std::string &message);
+	static void throwCachedCharStorageException(const std::string &message);
+	//static void throwBookReadingException(const std::string &resourceId, const ZLFile &file);
 };
 
 #endif /* __ANDROIDUTIL_H__ */

@@ -113,6 +113,9 @@ public abstract class ZLFile {
 		}
 
 		if (!path.startsWith("/")) {
+			while (path.startsWith("./")) {
+				path = path.substring(2);
+			}
 			return ZLResourceFile.createResourceFile(path);
 		}
 		int index = path.lastIndexOf(':');
@@ -183,6 +186,11 @@ public abstract class ZLFile {
 			return false;
 		}
 		return getPath().equals(((ZLFile)o).getPath());
+	}
+
+	@Override
+	public String toString() {
+	  	return "ZLFile [" + getPath() + "]";
 	}
 
 	protected boolean isCached() {

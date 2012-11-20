@@ -17,7 +17,7 @@
  * 02110-1301, USA.
  */
 
-#include <string.h>
+#include <cstring>
 
 #include <algorithm>
 
@@ -26,36 +26,39 @@
 
 #include "ZLCachedMemoryAllocator.h"
 #include "ZLTextParagraph.h"
-
+#include "ZLTextStyleEntry.h"
 
 const shared_ptr<ZLTextParagraphEntry> ResetBidiEntry::Instance = new ResetBidiEntry();
 
-short ZLTextStyleEntry::length(Length name, const Metrics &metrics) const {
-	switch (myLengths[name].Unit) {
+/*
+short ZLTextStyleEntry::length(Feature featureId, const Metrics &metrics) const {
+	switch (myLengths[featureId].Unit) {
 		default:
 		case SIZE_UNIT_PIXEL:
-			return myLengths[name].Size;
+			return myLengths[featureId].Size;
 		case SIZE_UNIT_EM_100:
-			return (myLengths[name].Size * metrics.FontSize + 50) / 100;
+			return (myLengths[featureId].Size * metrics.FontSize + 50) / 100;
 		case SIZE_UNIT_EX_100:
-			return (myLengths[name].Size * metrics.FontXHeight + 50) / 100;
+			return (myLengths[featureId].Size * metrics.FontXHeight + 50) / 100;
 		case SIZE_UNIT_PERCENT:
-			switch (name) {
+			switch (featureId) {
 				default:
 				case LENGTH_LEFT_INDENT:
 				case LENGTH_RIGHT_INDENT:
 				case LENGTH_FIRST_LINE_INDENT_DELTA:
-					return (myLengths[name].Size * metrics.FullWidth + 50) / 100;
+					return (myLengths[featureId].Size * metrics.FullWidth + 50) / 100;
 				case LENGTH_SPACE_BEFORE:
 				case LENGTH_SPACE_AFTER:
-					return (myLengths[name].Size * metrics.FullHeight + 50) / 100;
+					return (myLengths[featureId].Size * metrics.FullHeight + 50) / 100;
+				case LENGTH_FONT_SIZE:
+					return (myLengths[featureId].Size * metrics.FontSize + 50) / 100;
 			}
 	}
 }
 
 ZLTextStyleEntry::ZLTextStyleEntry(char *address) {
-	myMask = ZLCachedMemoryAllocator::readUInt32(address);
-	address += 4;
+	myFeatureMask = ZLCachedMemoryAllocator::readUInt16(address);
+	address += 2;
 
 	const int lengthMinusOne = ZLTextStyleEntry::NUMBER_OF_LENGTHS - 1;
 	for (int i = 0; i < lengthMinusOne; i += 2) {
@@ -78,14 +81,15 @@ ZLTextStyleEntry::ZLTextStyleEntry(char *address) {
 	mySupportedFontModifier = *address++;
 	myFontModifier = *address++;
 	myAlignmentType = (ZLTextAlignmentType)*address++;
-	myFontSizeMag = *address++;
-	if (fontFamilySupported()) {
-		const size_t len = ZLCachedMemoryAllocator::readUInt16(address);
+	myFontSizeMagnification = *address++;
+	if (isFeatureSupported(FONT_FAMILY)) {
+		const std::size_t len = ZLCachedMemoryAllocator::readUInt16(address);
 		ZLUnicodeUtil::Ucs2Char *ucs2data = (ZLUnicodeUtil::Ucs2Char *)(address + 2);
 		ZLUnicodeUtil::Ucs2String ucs2str(ucs2data, ucs2data + len);
 		ZLUnicodeUtil::ucs2ToUtf8(myFontFamily, ucs2str);
 	}
 }
+*/
 
 ZLTextControlEntryPool ZLTextControlEntryPool::Pool;
 
@@ -100,15 +104,16 @@ shared_ptr<ZLTextParagraphEntry> ZLTextControlEntryPool::controlEntry(ZLTextKind
 	return entry;
 }
 
+/*
 ZLTextHyperlinkControlEntry::ZLTextHyperlinkControlEntry(const char *address) : ZLTextControlEntry((ZLTextKind)*address, true), myHyperlinkType((ZLHyperlinkType)*(address + 1)) {
-	const size_t len = ZLCachedMemoryAllocator::readUInt16(address + 2);
+	const std::size_t len = ZLCachedMemoryAllocator::readUInt16(address + 2);
 	ZLUnicodeUtil::Ucs2Char *ucs2data = (ZLUnicodeUtil::Ucs2Char *)(address + 4);
 	ZLUnicodeUtil::Ucs2String ucs2str(ucs2data, ucs2data + len);
 	ZLUnicodeUtil::ucs2ToUtf8(myLabel, ucs2str);
 }
 
 ZLTextEntry::ZLTextEntry(const char *address) {
-	const size_t len = ZLCachedMemoryAllocator::readUInt32(address);
+	const std::size_t len = ZLCachedMemoryAllocator::readUInt32(address);
 	ZLUnicodeUtil::Ucs2Char *ucs2data = (ZLUnicodeUtil::Ucs2Char *)(address + 4);
 	ZLUnicodeUtil::Ucs2String ucs2str(ucs2data, ucs2data + len);
 	ZLUnicodeUtil::ucs2ToUtf8(myText, ucs2str);
@@ -116,12 +121,11 @@ ZLTextEntry::ZLTextEntry(const char *address) {
 
 ImageEntry::ImageEntry(const char *address) {
 	myVOffset = ZLCachedMemoryAllocator::readUInt16(address);
-	const size_t len = ZLCachedMemoryAllocator::readUInt16(address + 2);
+	const std::size_t len = ZLCachedMemoryAllocator::readUInt16(address + 2);
 	ZLUnicodeUtil::Ucs2Char *ucs2data = (ZLUnicodeUtil::Ucs2Char *)(address + 4);
 	ZLUnicodeUtil::Ucs2String ucs2str(ucs2data, ucs2data + len);
 	ZLUnicodeUtil::ucs2ToUtf8(myId, ucs2str);
 }
-
 
 const shared_ptr<ZLTextParagraphEntry> ZLTextParagraph::Iterator::entry() const {
 	if (myEntry.isNull()) {
@@ -139,7 +143,8 @@ const shared_ptr<ZLTextParagraphEntry> ZLTextParagraph::Iterator::entry() const 
 			case ZLTextParagraphEntry::IMAGE_ENTRY:
 				myEntry = new ImageEntry(myPointer + 2);
 				break;
-			case ZLTextParagraphEntry::STYLE_ENTRY:
+			case ZLTextParagraphEntry::STYLE_CSS_ENTRY:
+			case ZLTextParagraphEntry::STYLE_OTHER_ENTRY:
 				myEntry = new ZLTextStyleEntry(myPointer + 2);
 				break;
 			case ZLTextParagraphEntry::FIXED_HSPACE_ENTRY:
@@ -160,7 +165,7 @@ void ZLTextParagraph::Iterator::next() {
 		switch (*myPointer) {
 			case ZLTextParagraphEntry::TEXT_ENTRY:
 			{
-				const size_t len = ZLCachedMemoryAllocator::readUInt32(myPointer + 2);
+				const std::size_t len = ZLCachedMemoryAllocator::readUInt32(myPointer + 2);
 				myPointer += len * 2 + 6;
 				break;
 			}
@@ -169,25 +174,25 @@ void ZLTextParagraph::Iterator::next() {
 				break;
 			case ZLTextParagraphEntry::HYPERLINK_CONTROL_ENTRY:
 			{
-				const size_t len = ZLCachedMemoryAllocator::readUInt16(myPointer + 4);
+				const std::size_t len = ZLCachedMemoryAllocator::readUInt16(myPointer + 4);
 				myPointer += len * 2 + 6;
 				break;
 			}
 			case ZLTextParagraphEntry::IMAGE_ENTRY:
 			{
-				const size_t len = ZLCachedMemoryAllocator::readUInt16(myPointer + 4);
+				const std::size_t len = ZLCachedMemoryAllocator::readUInt16(myPointer + 4);
 				myPointer += len * 2 + 6;
 				break;
 			}
 			case ZLTextParagraphEntry::STYLE_ENTRY:
 			{
 				unsigned int mask = ZLCachedMemoryAllocator::readUInt32(myPointer + 2);
-				bool withFontFamily = (mask & ZLTextStyleEntry::SUPPORT_FONT_FAMILY) == ZLTextStyleEntry::SUPPORT_FONT_FAMILY;
+				bool withFontFamily = (mask & (1 << ZLTextStyleEntry::FONT_FAMILY)) != 0;
 
 				myPointer += 10 + 2 * (ZLTextStyleEntry::NUMBER_OF_LENGTHS +
 						(ZLTextStyleEntry::NUMBER_OF_LENGTHS + 1) / 2);
 				if (withFontFamily) {
-					const size_t len = ZLCachedMemoryAllocator::readUInt16(myPointer);
+					const std::size_t len = ZLCachedMemoryAllocator::readUInt16(myPointer);
 					myPointer += 2 + 2 * len;
 				}
 				break;
@@ -200,13 +205,13 @@ void ZLTextParagraph::Iterator::next() {
 				break;
 		}
 		if (*myPointer == 0) {
-			memcpy(&myPointer, myPointer + 1, sizeof(char*));
+			std::memcpy(&myPointer, myPointer + 1, sizeof(char*));
 		}
 	}
 }
 
-size_t ZLTextParagraph::textDataLength() const {
-	size_t len = 0;
+std::size_t ZLTextParagraph::textDataLength() const {
+	std::size_t len = 0;
 	for (Iterator it = *this; !it.isEnd(); it.next()) {
 		if (it.entryKind() == ZLTextParagraphEntry::TEXT_ENTRY) {
 			len += ((ZLTextEntry&)*it.entry()).dataLength();
@@ -215,8 +220,8 @@ size_t ZLTextParagraph::textDataLength() const {
 	return len;
 }
 
-size_t ZLTextParagraph::characterNumber() const {
-	size_t len = 0;
+std::size_t ZLTextParagraph::characterNumber() const {
+	std::size_t len = 0;
 	for (Iterator it = *this; !it.isEnd(); it.next()) {
 		switch (it.entryKind()) {
 			case ZLTextParagraphEntry::TEXT_ENTRY:
@@ -234,33 +239,4 @@ size_t ZLTextParagraph::characterNumber() const {
 	}
 	return len;
 }
-
-
-ZLTextTreeParagraph::ZLTextTreeParagraph(ZLTextTreeParagraph *parent) : myIsOpen(false), myParent(parent) {
-	if (parent != 0) {
-		parent->addChild(this);
-		myDepth = parent->myDepth + 1;
-	} else {
-		myDepth = 0;
-	}
-}
-
-void ZLTextTreeParagraph::openTree() {
-	for (ZLTextTreeParagraph *p = parent(); p != 0; p = p->parent()) {
-		p->open(true);
-	}
-}
-
-void ZLTextTreeParagraph::removeFromParent() {
-	if (myParent != 0) {
-		myParent->myChildren.erase(std::find(myParent->myChildren.begin(), myParent->myChildren.end(), this));
-	}
-}
-
-int ZLTextTreeParagraph::fullSize() const {
-	int size = 1;
-	for (std::vector<ZLTextTreeParagraph*>::const_iterator it = myChildren.begin(); it != myChildren.end(); ++it) {
-		size += (*it)->fullSize();
-	}
-	return size;
-}
+*/

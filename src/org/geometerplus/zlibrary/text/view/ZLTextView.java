@@ -237,10 +237,16 @@ public abstract class ZLTextView extends ZLTextViewBase {
 				myCurrentPage = myNextPage;
 				myNextPage = swap;
 				myNextPage.reset();
-				if (myCurrentPage.PaintState == PaintStateEnum.NOTHING_TO_PAINT) {
-					preparePaintInfo(myPreviousPage);
-					myCurrentPage.StartCursor.setCursor(myPreviousPage.EndCursor);
-					myCurrentPage.PaintState = PaintStateEnum.START_IS_KNOWN;
+				switch (myCurrentPage.PaintState) {
+					case PaintStateEnum.NOTHING_TO_PAINT:
+						preparePaintInfo(myPreviousPage);
+						myCurrentPage.StartCursor.setCursor(myPreviousPage.EndCursor);
+						myCurrentPage.PaintState = PaintStateEnum.START_IS_KNOWN;
+						break;
+					case PaintStateEnum.READY:
+						myNextPage.StartCursor.setCursor(myCurrentPage.EndCursor);
+						myNextPage.PaintState = PaintStateEnum.START_IS_KNOWN;
+						break;
 				}
 				break;
 			}
@@ -375,11 +381,17 @@ public abstract class ZLTextView extends ZLTextViewBase {
 	}
 
 	@Override
+	public synchronized void preparePage(ZLPaintContext context, PageIndex pageIndex) {
+		myContext = context;
+		preparePaintInfo(getPage(pageIndex));
+	}
+
+	@Override
 	public synchronized void paint(ZLPaintContext context, PageIndex pageIndex) {
 		myContext = context;
 		final ZLFile wallpaper = getWallpaperFile();
 		if (wallpaper != null) {
-			context.clear(wallpaper, wallpaper instanceof ZLResourceFile);
+			context.clear(wallpaper, getWallpaperMode());
 		} else {
 			context.clear(getBackgroundColor());
 		}
@@ -544,7 +556,7 @@ public abstract class ZLTextView extends ZLTextViewBase {
 
 		final float charWidth = computeCharWidth();
 
-		final int indentWidth = getElementWidth(ZLTextElement.IndentElement, 0);
+		final int indentWidth = getElementWidth(ZLTextElement.Indent, 0);
 		final float effectiveWidth = textWidth - (indentWidth + 0.5f * textWidth) / charsPerParagraph;
 		float charsPerLine = Math.min(effectiveWidth / charWidth,
 				charsPerParagraph * 1.2f);
@@ -784,9 +796,7 @@ public abstract class ZLTextView extends ZLTextViewBase {
 						areaX, areaY,
 						imageElement.ImageData,
 						getTextAreaSize(),
-						imageElement.IsCover
-							? ZLPaintContext.ScalingType.FitMaximum
-							: ZLPaintContext.ScalingType.IntegerCoefficient
+						getScalingType(imageElement)
 					);
 				} else if (element == ZLTextElement.HSpace) {
 					final int cw = context.getSpaceWidth();
@@ -830,7 +840,7 @@ public abstract class ZLTextView extends ZLTextViewBase {
 			resetTextStyle();
 			final ZLTextParagraphCursor paragraphCursor = result.getParagraphCursor();
 			final int wordIndex = result.getElementIndex();
-			applyControls(paragraphCursor, 0, wordIndex);
+			applyStyleChanges(paragraphCursor, 0, wordIndex);
 			ZLTextLineInfo info = new ZLTextLineInfo(paragraphCursor, wordIndex, result.getCharIndex(), getTextStyle());
 			final int endIndex = info.ParagraphCursorLength;
 			while (info.EndElementIndex != endIndex) {
@@ -866,7 +876,7 @@ public abstract class ZLTextView extends ZLTextViewBase {
 		final ZLTextLineInfo info = new ZLTextLineInfo(paragraphCursor, startIndex, startCharIndex, getTextStyle());
 		final ZLTextLineInfo cachedInfo = myLineInfoCache.get(info);
 		if (cachedInfo != null) {
-			applyControls(paragraphCursor, startIndex, cachedInfo.EndElementIndex);
+			applyStyleChanges(paragraphCursor, startIndex, cachedInfo.EndElementIndex);
 			return cachedInfo;
 		}
 
@@ -876,8 +886,8 @@ public abstract class ZLTextView extends ZLTextViewBase {
 
 		if (isFirstLine) {
 			ZLTextElement element = paragraphCursor.getElement(currentElementIndex);
-			while (element instanceof ZLTextControlElement) {
-				applyControl((ZLTextControlElement)element);
+			while (isStyleChangeElement(element)) {
+				applyStyleChangeElement(element);
 				++currentElementIndex;
 				currentCharIndex = 0;
 				if (currentElementIndex == endIndex) {
@@ -930,11 +940,11 @@ public abstract class ZLTextView extends ZLTextViewBase {
 			} else if (element instanceof ZLTextWord) {
 				wordOccurred = true;
 				isVisible = true;
-			} else if (element instanceof ZLTextControlElement) {
-				applyControl((ZLTextControlElement)element);
 			} else if (element instanceof ZLTextImageElement) {
 				wordOccurred = true;
 				isVisible = true;
+			} else if (isStyleChangeElement(element)) {
+				applyStyleChangeElement(element);
 			}
 			if (newWidth > maxWidth) {
 				if (info.EndElementIndex != startIndex || element instanceof ZLTextWord) {
@@ -1127,8 +1137,8 @@ public abstract class ZLTextView extends ZLTextViewBase {
 				));
 				changeStyle = false;
 				wordOccurred = true;
-			} else if (element instanceof ZLTextControlElement) {
-				applyControl((ZLTextControlElement)element);
+			} else if (isStyleChangeElement(element)) {
+				applyStyleChangeElement(element);
 				changeStyle = true;
 			}
 			x += width;
@@ -1340,6 +1350,7 @@ public abstract class ZLTextView extends ZLTextViewBase {
 	}
 
 	public void clearCaches() {
+		resetMetrics();
 		rebuildPaintInfo();
 		Application.getViewWidget().reset();
 		myCharWidth = -1;
@@ -1402,7 +1413,7 @@ public abstract class ZLTextView extends ZLTextViewBase {
 		final int endElementIndex = paragraphCursor.getParagraphLength();
 
 		resetTextStyle();
-		applyControls(paragraphCursor, 0, cursor.getElementIndex());
+		applyStyleChanges(paragraphCursor, 0, cursor.getElementIndex());
 
 		while (!cursor.isEndOfParagraph() && (size > 0)) {
 			ZLTextLineInfo info = processTextLine(paragraphCursor, cursor.getElementIndex(), cursor.getCharIndex(), endElementIndex);

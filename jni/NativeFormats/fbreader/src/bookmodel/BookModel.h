@@ -20,29 +20,36 @@
 #ifndef __BOOKMODEL_H__
 #define __BOOKMODEL_H__
 
+#include <jni.h>
+
 #include <map>
+#include <vector>
 #include <string>
 
 #include <ZLTextModel.h>
 #include <ZLTextParagraph.h>
-#include <ZLUserData.h>
-#include <ZLImageMapWriter.h>
 
 class ZLImage;
 class Book;
 
-class ContentsModel : public ZLTextTreeModel {
+class ContentsTree {
 
 public:
-	ContentsModel(const std::string &language, const std::string &directoryName, const std::string &fileExtension);
-	void setReference(const ZLTextTreeParagraph *paragraph, int reference);
-	int reference(const ZLTextTreeParagraph *paragraph) const;
+	ContentsTree();
+	ContentsTree(ContentsTree &parent, int reference);
+	void addText(const std::string &buffer);
+
+	const std::string &text() const;
+	int reference() const;
+	const std::vector<shared_ptr<ContentsTree> > &children() const;
 
 private:
-	std::map<const ZLTextTreeParagraph*,int> myReferenceByParagraph;
+	std::string myText;
+	const int myReference;
+	std::vector<shared_ptr<ContentsTree> > myChildren;
 };
 
-class BookModel : public ZLUserDataHolder {
+class BookModel {
 
 public:
 	struct Label {
@@ -60,29 +67,27 @@ public:
 	};
 
 public:
-	BookModel(const shared_ptr<Book> book);
+	BookModel(const shared_ptr<Book> book, jobject javaModel);
 	~BookModel();
 
 	void setHyperlinkMatcher(shared_ptr<HyperlinkMatcher> matcher);
 
 	shared_ptr<ZLTextModel> bookTextModel() const;
-	shared_ptr<ZLTextModel> contentsModel() const;
+	shared_ptr<ContentsTree> contentsTree() const;
 	const std::map<std::string,shared_ptr<ZLTextModel> > &footnotes() const;
-
-	shared_ptr<ZLImageMapWriter> imageMapWriter() const;
 
 	Label label(const std::string &id) const;
 	const std::map<std::string,Label> &internalHyperlinks() const;
 
 	const shared_ptr<Book> book() const;
 
-	void flush();
+	bool flush();
 
 private:
 	const shared_ptr<Book> myBook;
+	jobject myJavaModel;
 	shared_ptr<ZLTextModel> myBookTextModel;
-	shared_ptr<ZLTextModel> myContentsModel;
-	shared_ptr<ZLImageMapWriter> myImagesWriter;
+	shared_ptr<ContentsTree> myContentsTree;
 	std::map<std::string,shared_ptr<ZLTextModel> > myFootnotes;
 	std::map<std::string,Label> myInternalHyperlinks;
 	shared_ptr<HyperlinkMatcher> myHyperlinkMatcher;
@@ -91,9 +96,20 @@ friend class BookReader;
 };
 
 inline shared_ptr<ZLTextModel> BookModel::bookTextModel() const { return myBookTextModel; }
-inline shared_ptr<ZLTextModel> BookModel::contentsModel() const { return myContentsModel; }
+inline shared_ptr<ContentsTree> BookModel::contentsTree() const { return myContentsTree; }
 inline const std::map<std::string,shared_ptr<ZLTextModel> > &BookModel::footnotes() const { return myFootnotes; }
-inline shared_ptr<ZLImageMapWriter> BookModel::imageMapWriter() const { return myImagesWriter; }
 inline const std::map<std::string,BookModel::Label> &BookModel::internalHyperlinks() const { return myInternalHyperlinks; }
+
+inline ContentsTree::ContentsTree() : myReference(-1) {}
+inline ContentsTree::ContentsTree(ContentsTree &parent, int reference) : myReference(reference) {
+	parent.myChildren.push_back(this);
+}
+inline void ContentsTree::addText(const std::string &buffer) {
+	myText += buffer;
+}
+
+inline const std::string &ContentsTree::text() const { return myText; }
+inline int ContentsTree::reference() const { return myReference; }
+inline const std::vector<shared_ptr<ContentsTree> > &ContentsTree::children() const { return myChildren; }
 
 #endif /* __BOOKMODEL_H__ */

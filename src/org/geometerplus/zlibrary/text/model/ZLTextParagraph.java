@@ -25,9 +25,11 @@ public interface ZLTextParagraph {
 		byte IMAGE = 2;
 		byte CONTROL = 3;
 		byte HYPERLINK_CONTROL = 4;
-		byte STYLE = 5;
-		byte FIXED_HSPACE = 6;
-		byte RESET_BIDI = 7;
+		byte STYLE_CSS = 5;
+		byte STYLE_OTHER = 6;
+		byte STYLE_CLOSE = 7;
+		byte FIXED_HSPACE = 8;
+		byte RESET_BIDI = 9;
 	}
 
 	interface EntryIterator {
@@ -44,6 +46,7 @@ public interface ZLTextParagraph {
 		String getHyperlinkId();
 
 		ZLImageEntry getImageEntry();
+		ZLTextStyleEntry getStyleEntry();
 
 		short getFixedHSpaceLength();
 

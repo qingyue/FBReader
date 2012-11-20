@@ -63,9 +63,7 @@ public class PreferenceActivity extends ZLPreferenceActivity {
 
 		final Screen directoriesScreen = createPreferenceScreen("directories");
 		directoriesScreen.addOption(Paths.BooksDirectoryOption(), "books");
-		if (AndroidFontUtil.areExternalFontsSupported()) {
-			directoriesScreen.addOption(Paths.FontsDirectoryOption(), "fonts");
-		}
+		directoriesScreen.addOption(Paths.FontsDirectoryOption(), "fonts");
 		directoriesScreen.addOption(Paths.WallpapersDirectoryOption(), "wallpapers");
 
 		final Screen appearanceScreen = createPreferenceScreen("appearance");
@@ -261,6 +259,10 @@ public class PreferenceActivity extends ZLPreferenceActivity {
 		final ZLPreferenceSet footerPreferences = new ZLPreferenceSet();
 		final ZLPreferenceSet bgPreferences = new ZLPreferenceSet();
 
+		final Screen cssScreen = createPreferenceScreen("css");
+		cssScreen.addOption(collection.UseCSSFontSizeOption, "fontSize");
+		cssScreen.addOption(collection.UseCSSTextAlignmentOption, "textAlignment");
+
 		final Screen colorsScreen = createPreferenceScreen("colors");
 		colorsScreen.addPreference(new WallpaperPreference(
 			this, profile, colorsScreen.Resource, "background"
@@ -351,9 +353,6 @@ public class PreferenceActivity extends ZLPreferenceActivity {
 
 		final ScrollingPreferences scrollingPreferences = ScrollingPreferences.Instance();
 
-		//final Screen tapZonesScreen = createPreferenceScreen("tapZones");
-		//tapZonesScreen.addOption(scrollingPreferences.TapZonesSchemeOption, "tapZonesScheme");
-
 		final ZLKeyBindings keyBindings = fbReader.keyBindings();
 
 		final Screen scrollingScreen = createPreferenceScreen("scrolling");
@@ -438,9 +437,12 @@ public class PreferenceActivity extends ZLPreferenceActivity {
 
 		final Screen imagesScreen = createPreferenceScreen("images");
 		imagesScreen.addOption(fbReader.ImageTappingActionOption, "tappingAction");
+		imagesScreen.addOption(fbReader.FitImagesToScreenOption, "fitImagesToScreen");
 		imagesScreen.addOption(fbReader.ImageViewBackgroundOption, "backgroundColor");
 
 		final Screen cancelMenuScreen = createPreferenceScreen("cancelMenu");
+		cancelMenuScreen.addOption(fbReader.ShowLibraryInCancelMenuOption, "library");
+		cancelMenuScreen.addOption(fbReader.ShowNetworkLibraryInCancelMenuOption, "networkLibrary");
 		cancelMenuScreen.addOption(fbReader.ShowPreviousBookInCancelMenuOption, "previousBook");
 		cancelMenuScreen.addOption(fbReader.ShowPositionsInCancelMenuOption, "positions");
 		final String[] backKeyActions =

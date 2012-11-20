@@ -20,6 +20,7 @@
 package org.geometerplus.fbreader.formats.oeb;
 
 import org.geometerplus.zlibrary.core.filesystem.*;
+import org.geometerplus.zlibrary.core.encodings.AutoEncodingCollection;
 import org.geometerplus.zlibrary.core.image.ZLImage;
 
 import org.geometerplus.fbreader.bookmodel.BookModel;
@@ -52,14 +53,14 @@ public class OEBPlugin extends JavaFormatPlugin {
 				return child;
 			}
 		}
-		throw new BookReadingException("opfFileNotFound");
+		throw new BookReadingException("opfFileNotFound", oebFile);
 	}
 
 	@Override
 	public void readMetaInfo(Book book) throws BookReadingException {
 		new OEBMetaInfoReader(book).readMetaInfo(getOpfFile(book.File));
 	}
-	
+
 	@Override
 	public void readModel(BookModel model) throws BookReadingException {
 		model.Book.File.setCached(true);
@@ -72,7 +73,7 @@ public class OEBPlugin extends JavaFormatPlugin {
 			return new OEBCoverReader().readCover(getOpfFile(file));
 		} catch (BookReadingException e) {
 			return null;
-		} 
+		}
 	}
 
 	@Override
@@ -81,6 +82,16 @@ public class OEBPlugin extends JavaFormatPlugin {
 			return new OEBAnnotationReader().readAnnotation(getOpfFile(file));
 		} catch (BookReadingException e) {
 			return null;
-		} 
+		}
+	}
+
+	@Override
+	public AutoEncodingCollection supportedEncodings() {
+		return new AutoEncodingCollection();
+	}
+
+	@Override
+	public void detectLanguageAndEncoding(Book book) {
+		book.setEncoding("auto");
 	}
 }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Thai zlibrary resources, by Samphan Pojanasophanakul -->
 <resources>
 	<node name="dialog">
@@ -30,20 +30,6 @@
 		<node name="red" value="แดง"/>
 		<node name="green" value="เขียว"/>
 		<node name="blue" value="น้ำเงิน"/>
-		<node name="black" value="ดำ"/>
-		<node name="white" value="ขาว"/>
-		<node name="maroon" value="น้ำตาลแดง"/>
-		<node name="olive" value="เขีวเข้ม"/>
-		<node name="navy" value="ฟ้า"/>
-		<node name="purple" value="ม่วง"/>
-		<node name="teal" value="น้ำเงินอมเขียว"/>
-		<node name="silver" value="เงิน"/>
-		<node name="gray" value="เทา"/>
-		<node name="lime" value="เขียวมะนาว"/>
-		<node name="yellow" value="เหลือง"/>
-		<node name="magenta" value="แดงม่วง"/>
-		<node name="cyan" value="น้ำเงินเขียว"/>
-		<node name="custom..." value="กำหนดเอง..."/>
 	</node>
 	<node name="language">
 		<node name="ar" value="อารบิค"/>
@@ -63,13 +49,14 @@
 		<node name="it" value="อิตาลี"/>
 		<node name="lt" value="ลิทัวเนีย"/>
 		<node name="nl" value="ดัตช์"/>
-		<node name="no" value="นอร์เวย์"/>
+		<node name="nb" value="นอร์เวย์"/>
 		<node name="pl" value="โปแลนด์"/>
 		<node name="pt" value="โปรตุเกส"/>
 		<node name="ro" value="Romanian" toBeTranslated="true"/>
 		<node name="ru" value="รัสเซีย"/>
 		<node name="sv" value="สวีเดน"/>
-		<node name="th" value="ไทย" />
+		<node name="ta" value="Tamil" toBeTranslated="true"/>
+		<node name="th" value="ไทย"/>
 		<node name="tr" value="ตุรกี"/>
 		<node name="uk" value="ยูเครน"/>
 		<node name="vi" value="เวียดนาม"/>

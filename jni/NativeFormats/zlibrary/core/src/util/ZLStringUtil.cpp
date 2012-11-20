@@ -64,7 +64,7 @@ void ZLStringUtil::appendNumber(std::string &str, unsigned int n) {
 }
 
 void ZLStringUtil::append(std::string &str, const std::vector<std::string> &text) {
-	size_t len = str.length();
+	std::size_t len = str.length();
 	for (std::vector<std::string>::const_iterator it = text.begin(); it != text.end(); ++it) {
 		len += it->length();
 	}
@@ -75,19 +75,32 @@ void ZLStringUtil::append(std::string &str, const std::vector<std::string> &text
 }
 
 void ZLStringUtil::stripWhiteSpaces(std::string &str) {
-	size_t counter = 0;
-	size_t length = str.length();
+	std::size_t counter = 0;
+	std::size_t length = str.length();
 	while ((counter < length) && isspace((unsigned char)str[counter])) {
 		counter++;
 	}
 	str.erase(0, counter);
 	length -= counter;
 
-	size_t r_counter = length;
+	std::size_t r_counter = length;
 	while ((r_counter > 0) && isspace((unsigned char)str[r_counter - 1])) {
 		r_counter--;
 	}
 	str.erase(r_counter, length - r_counter);
+}
+
+std::vector<std::string> ZLStringUtil::split(const std::string &str, const std::string &delimiter) {
+	std::vector<std::string> result;
+	std::size_t start = 0;
+	std::size_t index = str.find(delimiter);
+	while (index != std::string::npos) {
+		result.push_back(str.substr(start, index - start));
+		start = index + delimiter.length();
+		index = str.find(delimiter, start);
+	}
+	result.push_back(str.substr(start, index - start));
+	return result;
 }
 
 std::string ZLStringUtil::printf(const std::string &format, const std::string &arg0) {
@@ -105,11 +118,28 @@ std::string ZLStringUtil::doubleToString(double value) {
 	return buf;
 }
 
-double ZLStringUtil::stringToDouble(const std::string &value, double defaultValue) {
-	if (!value.empty()) {
+double ZLStringUtil::stringToDouble(const std::string &str, double defaultValue) {
+	if (!str.empty()) {
 		setlocale(LC_NUMERIC, "C");
-		return atof(value.c_str());
+		return atof(str.c_str());
 	} else {
 		return defaultValue;
 	}
+}
+
+int ZLStringUtil::stringToInteger(const std::string &str, int defaultValue) {
+	if (str.empty()) {
+		return defaultValue;
+	}
+	if (!isdigit(str[0]) && (str.length() == 1 || str[0] != '-' || !isdigit(str[1]))) {
+		return defaultValue;
+	}
+
+	for (std::size_t i = 1; i < str.length(); ++i) {
+		if (!isdigit(str[i])) {
+			return defaultValue;
+		}
+	}
+
+	return atoi(str.c_str());
 }

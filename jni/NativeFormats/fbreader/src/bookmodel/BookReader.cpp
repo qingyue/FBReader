@@ -17,8 +17,14 @@
  * 02110-1301, USA.
  */
 
+#include <AndroidUtil.h>
+#include <JniEnvelope.h>
+
 #include <ZLImage.h>
+#include <ZLFileImage.h>
 #include <ZLLogger.h>
+#include <ZLCachedMemoryAllocator.h>
+#include <ZLTextStyleEntry.h>
 
 #include "BookReader.h"
 #include "BookModel.h"
@@ -28,10 +34,6 @@
 
 BookReader::BookReader(BookModel &model) : myModel(model) {
 	myCurrentTextModel = 0;
-	myLastTOCParagraphIsEmpty = false;
-
-	myTextParagraphExists = false;
-	myContentsParagraphExists = false;
 
 	myInsideTitle = false;
 	mySectionContainsRegularContents = false;
@@ -49,10 +51,24 @@ void BookReader::setFootnoteTextModel(const std::string &id) {
 	if (it != myModel.myFootnotes.end()) {
 		myCurrentTextModel = (*it).second;
 	} else {
-		myCurrentTextModel = new ZLTextPlainModel(id, myModel.myBookTextModel->language(), 8192,
-				Library::Instance().cacheDirectory(), "nfootnote_id=" + id);
+		if (myFootnotesAllocator.isNull()) {
+			myFootnotesAllocator = new ZLCachedMemoryAllocator(8192, Library::Instance().cacheDirectory(), "footnotes");
+		}
+		myCurrentTextModel = new ZLTextPlainModel(id, myModel.myBookTextModel->language(), myFootnotesAllocator);
 		myModel.myFootnotes.insert(std::make_pair(id, myCurrentTextModel));
 	}
+}
+
+bool BookReader::paragraphIsOpen() const {
+	if (myCurrentTextModel.isNull()) {
+		return false;
+	}
+	for (std::list<shared_ptr<ZLTextModel> >::const_iterator it = myModelsWithOpenParagraphs.begin(); it != myModelsWithOpenParagraphs.end(); ++it) {
+		if (*it == myCurrentTextModel) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void BookReader::unsetTextModel() {
@@ -76,6 +92,7 @@ bool BookReader::isKindStackEmpty() const {
 }
 
 void BookReader::beginParagraph(ZLTextParagraph::Kind kind) {
+	endParagraph();
 	if (myCurrentTextModel != 0) {
 		((ZLTextPlainModel&)*myCurrentTextModel).createParagraph(kind);
 		for (std::vector<FBTextKind>::const_iterator it = myKindStack.begin(); it != myKindStack.end(); ++it) {
@@ -84,19 +101,19 @@ void BookReader::beginParagraph(ZLTextParagraph::Kind kind) {
 		if (!myHyperlinkReference.empty()) {
 			myCurrentTextModel->addHyperlinkControl(myHyperlinkKind, myHyperlinkType, myHyperlinkReference);
 		}
-		myTextParagraphExists = true;
+		myModelsWithOpenParagraphs.push_back(myCurrentTextModel);
 	}
 }
 
 void BookReader::endParagraph() {
-	if (myTextParagraphExists) {
+	if (paragraphIsOpen()) {
 		flushTextBufferToParagraph();
-		myTextParagraphExists = false;
+		myModelsWithOpenParagraphs.remove(myCurrentTextModel);
 	}
 }
 
 void BookReader::addControl(FBTextKind kind, bool start) {
-	if (myTextParagraphExists) {
+	if (paragraphIsOpen()) {
 		flushTextBufferToParagraph();
 		myCurrentTextModel->addControl(kind, start);
 	}
@@ -105,15 +122,23 @@ void BookReader::addControl(FBTextKind kind, bool start) {
 	}
 }
 
-void BookReader::addControl(const ZLTextStyleEntry &entry) {
-	if (myTextParagraphExists) {
+void BookReader::addStyleEntry(const ZLTextStyleEntry &entry) {
+	if (paragraphIsOpen()) {
 		flushTextBufferToParagraph();
-		myCurrentTextModel->addControl(entry);
+		myCurrentTextModel->addStyleEntry(entry);
+	}
+}
+
+void BookReader::addStyleCloseEntry() {
+	if (paragraphIsOpen()) {
+		flushTextBufferToParagraph();
+		myCurrentTextModel->addStyleCloseEntry();
 	}
 }
 
 void BookReader::addFixedHSpace(unsigned char length) {
-	if (myTextParagraphExists) {
+	if (paragraphIsOpen()) {
+		flushTextBufferToParagraph();
 		myCurrentTextModel->addFixedHSpace(length);
 	}
 }
@@ -143,7 +168,7 @@ void BookReader::addHyperlinkControl(FBTextKind kind, const std::string &label) 
 		"hyperlink",
 		" + control (" + type + "): " + label
 	);
-	if (myTextParagraphExists) {
+	if (paragraphIsOpen()) {
 		flushTextBufferToParagraph();
 		myCurrentTextModel->addHyperlinkControl(kind, myHyperlinkType, label);
 	}
@@ -153,7 +178,7 @@ void BookReader::addHyperlinkControl(FBTextKind kind, const std::string &label) 
 void BookReader::addHyperlinkLabel(const std::string &label) {
 	if (!myCurrentTextModel.isNull()) {
 		int paragraphNumber = myCurrentTextModel->paragraphsNumber();
-		if (myTextParagraphExists) {
+		if (paragraphIsOpen()) {
 			--paragraphNumber;
 		}
 		addHyperlinkLabel(label, paragraphNumber);
@@ -171,7 +196,7 @@ void BookReader::addHyperlinkLabel(const std::string &label, int paragraphNumber
 }
 
 void BookReader::addData(const std::string &data) {
-	if (!data.empty() && myTextParagraphExists) {
+	if (!data.empty() && paragraphIsOpen()) {
 		if (!myInsideTitle) {
 			mySectionContainsRegularContents = true;
 		}
@@ -180,8 +205,8 @@ void BookReader::addData(const std::string &data) {
 }
 
 void BookReader::addContentsData(const std::string &data) {
-	if (!data.empty() && !myTOCStack.empty()) {
-		myContentsBuffer.push_back(data);
+	if (!data.empty() && !myContentsTreeStack.empty()) {
+		myContentsTreeStack.top()->addText(data);
 	}
 }
 
@@ -191,15 +216,24 @@ void BookReader::flushTextBufferToParagraph() {
 }
 
 void BookReader::addImage(const std::string &id, shared_ptr<const ZLImage> image) {
-	if (!image.isNull()) {
-		myModel.myImagesWriter->addImage(id, *image);
+	if (image.isNull()) {
+		return;
 	}
+
+	JNIEnv *env = AndroidUtil::getEnv();
+
+	jobject javaImage = AndroidUtil::createJavaImage(env, (const ZLFileImage&)*image);
+	jstring javaId = AndroidUtil::createJavaString(env, id);
+	AndroidUtil::Method_NativeBookModel_addImage->call(myModel.myJavaModel, javaId, javaImage);
+
+	env->DeleteLocalRef(javaId);
+	env->DeleteLocalRef(javaImage);
 }
 
 void BookReader::insertEndParagraph(ZLTextParagraph::Kind kind) {
 	if ((myCurrentTextModel != 0) && mySectionContainsRegularContents) {
-		size_t size = myCurrentTextModel->paragraphsNumber();
-		if ((size > 0) && (((*myCurrentTextModel)[(size_t)-1])->kind() != kind)) {
+		std::size_t size = myCurrentTextModel->paragraphsNumber();
+		if ((size > 0) && (((*myCurrentTextModel)[(std::size_t)-1])->kind() != kind)) {
 			((ZLTextPlainModel&)*myCurrentTextModel).createParagraph(kind);
 			mySectionContainsRegularContents = false;
 		}
@@ -214,16 +248,16 @@ void BookReader::insertEndOfTextParagraph() {
 	insertEndParagraph(ZLTextParagraph::END_OF_TEXT_PARAGRAPH);
 }
 
-void BookReader::addImageReference(const std::string &id, short vOffset) {
+void BookReader::addImageReference(const std::string &id, short vOffset, bool isCover) {
 	if (myCurrentTextModel != 0) {
 		mySectionContainsRegularContents = true;
-		if (myTextParagraphExists) {
+		if (paragraphIsOpen()) {
 			flushTextBufferToParagraph();
-			myCurrentTextModel->addImage(id, vOffset);
+			myCurrentTextModel->addImage(id, vOffset, isCover);
 		} else {
 			beginParagraph();
 			myCurrentTextModel->addControl(IMAGE, true);
-			myCurrentTextModel->addImage(id, vOffset);
+			myCurrentTextModel->addImage(id, vOffset, isCover);
 			myCurrentTextModel->addControl(IMAGE, false);
 			endParagraph();
 		}
@@ -232,52 +266,41 @@ void BookReader::addImageReference(const std::string &id, short vOffset) {
 
 void BookReader::beginContentsParagraph(int referenceNumber) {
 	if (myCurrentTextModel == myModel.myBookTextModel) {
-		ContentsModel &contentsModel = (ContentsModel&)*myModel.myContentsModel;
 		if (referenceNumber == -1) {
 			referenceNumber = myCurrentTextModel->paragraphsNumber();
 		}
-		ZLTextTreeParagraph *peek = myTOCStack.empty() ? 0 : myTOCStack.top();
-		if (!myContentsBuffer.empty()) {
-			contentsModel.addText(myContentsBuffer);
-			myContentsBuffer.clear();
-			myLastTOCParagraphIsEmpty = false;
+		shared_ptr<ContentsTree> parent =
+			myContentsTreeStack.empty() ? myModel.contentsTree() : myContentsTreeStack.top();
+		if (parent->text().empty()) {
+			parent->addText("...");
 		}
-		if (myLastTOCParagraphIsEmpty) {
-			contentsModel.addText("...");
-		}
-		ZLTextTreeParagraph *para = contentsModel.createParagraph(peek);
-		contentsModel.addControl(CONTENTS_TABLE_ENTRY, true);
-		contentsModel.setReference(para, referenceNumber);
-		myTOCStack.push(para);
-		myLastTOCParagraphIsEmpty = true;
+		new ContentsTree(*parent, referenceNumber);
+		const std::vector<shared_ptr<ContentsTree> > &children = parent->children();
+		myContentsTreeStack.push(children[children.size() - 1]);
 		myContentsParagraphExists = true;
 	}
 }
 
 void BookReader::endContentsParagraph() {
-	if (!myTOCStack.empty()) {
-		ContentsModel &contentsModel = (ContentsModel&)*myModel.myContentsModel;
-		if (!myContentsBuffer.empty()) {
-			contentsModel.addText(myContentsBuffer);
-			myContentsBuffer.clear();
-			myLastTOCParagraphIsEmpty = false;
+	if (!myContentsTreeStack.empty()) {
+		shared_ptr<ContentsTree> tree = myContentsTreeStack.top();
+		if (tree->text().empty()) {
+			tree->addText("...");
 		}
-		if (myLastTOCParagraphIsEmpty) {
-			contentsModel.addText("...");
-			myLastTOCParagraphIsEmpty = false;
-		}
-		myTOCStack.pop();
+		myContentsTreeStack.pop();
 	}
 	myContentsParagraphExists = false;
 }
 
-void BookReader::setReference(size_t contentsParagraphNumber, int referenceNumber) {
+/*
+void BookReader::setReference(std::size_t contentsParagraphNumber, int referenceNumber) {
 	ContentsModel &contentsModel = (ContentsModel&)*myModel.myContentsModel;
 	if (contentsParagraphNumber >= contentsModel.paragraphsNumber()) {
 		return;
 	}
 	contentsModel.setReference((const ZLTextTreeParagraph*)contentsModel[contentsParagraphNumber], referenceNumber);
 }
+*/
 
 void BookReader::reset() {
 	myKindStack.clear();

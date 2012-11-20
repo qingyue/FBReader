@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Point;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.format.DateFormat;
@@ -74,7 +75,6 @@ public final class ZLAndroidLibrary extends ZLibrary {
 
 	private ZLAndroidActivity myActivity;
 	private final Application myApplication;
-	private ZLAndroidWidget myWidget;
 
 	ZLAndroidLibrary(Application application) {
 		myApplication = application;
@@ -82,11 +82,10 @@ public final class ZLAndroidLibrary extends ZLibrary {
 
 	void setActivity(ZLAndroidActivity activity) {
 		myActivity = activity;
-		myWidget = null;
 	}
 
 	public void finish() {
-		if ((myActivity != null) && !myActivity.isFinishing()) {
+		if (myActivity != null && !myActivity.isFinishing()) {
 			myActivity.finish();
 		}
 	}
@@ -96,10 +95,7 @@ public final class ZLAndroidLibrary extends ZLibrary {
 	}
 
 	public ZLAndroidWidget getWidget() {
-		if (myWidget == null) {
-			myWidget = (ZLAndroidWidget)myActivity.findViewById(R.id.main_view);
-		}
-		return myWidget;
+		return (ZLAndroidWidget)myActivity.findViewById(R.id.main_view);
 	}
 
 	@Override
@@ -151,14 +147,42 @@ public final class ZLAndroidLibrary extends ZLibrary {
 		return (myActivity != null) ? myActivity.getScreenBrightness() : 0;
 	}
 
+	private DisplayMetrics myMetrics;
+
 	@Override
 	public int getDisplayDPI() {
-		if (myActivity == null) {
-			return 0;
+		if (myMetrics == null) {
+			if (myActivity == null) {
+				return 0;
+			}
+			myMetrics = new DisplayMetrics();
+			myActivity.getWindowManager().getDefaultDisplay().getMetrics(myMetrics);
 		}
-		DisplayMetrics metrics = new DisplayMetrics();
-		myActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		return (int)(160 * metrics.density);
+		return (int)(160 * myMetrics.density);
+	}
+
+	@Override
+	public int getPixelWidth() {
+		if (myMetrics == null) {
+			if (myActivity == null) {
+				return 0;
+			}
+			myMetrics = new DisplayMetrics();
+			myActivity.getWindowManager().getDefaultDisplay().getMetrics(myMetrics);
+		}
+		return myMetrics.widthPixels;
+	}
+
+	@Override
+	public int getPixelHeight() {
+		if (myMetrics == null) {
+			if (myActivity == null) {
+				return 0;
+			}
+			myMetrics = new DisplayMetrics();
+			myActivity.getWindowManager().getDefaultDisplay().getMetrics(myMetrics);
+		}
+		return myMetrics.heightPixels;
 	}
 
 	@Override

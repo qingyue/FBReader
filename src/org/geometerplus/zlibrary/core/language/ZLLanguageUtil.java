@@ -60,6 +60,10 @@ public abstract class ZLLanguageUtil {
 		}
 	}
 
+	public static String defaultLanguageCode() {
+		return Locale.getDefault().getLanguage();
+	}
+
 	public static List<String> languageCodes() {
 		if (ourLanguageCodes.isEmpty()) {
 			TreeSet<String> codes = new TreeSet<String>();
@@ -69,10 +73,12 @@ public abstract class ZLLanguageUtil {
 				if (index != -1) {
 					String str = name.substring(0, index);
 					if (!codes.contains(str)) {
-					    codes.add(str);
+						codes.add(str);
 					}
 				}
 			}
+			codes.add("id");
+			codes.add("de-traditional");
 
 			ourLanguageCodes.addAll(codes);
 		}
@@ -110,7 +116,7 @@ public abstract class ZLLanguageUtil {
 			case 0x11: return "ja";  // Japanese
 			case 0x12: return "ko";  // Korean
 			case 0x13: return "nl";  // Dutch
-			case 0x14: return "no";  // Norwegian
+			case 0x14: return "nb";  // Norwegian
 			case 0x15: return "pl";  // Polish
 			case 0x16: return "pt";  // Portuguese
 			case 0x17: return "rm";  // Romansh

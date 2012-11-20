@@ -32,37 +32,31 @@
 //#include <ZLTextMark.h>
 #include <ZLCachedMemoryAllocator.h>
 
-class ZLTextParagraph;
-class ZLTextTreeParagraph;
+class ZLTextStyleEntry;
 
 class ZLTextModel {
 
-public:
-	enum Kind {
-		PLAIN_TEXT_MODEL,
-		TREE_MODEL,
-	};
-
 protected:
-	ZLTextModel(const std::string &id, const std::string &language, const size_t rowSize,
-			const std::string &directoryName, const std::string &fileExtension);
+	ZLTextModel(const std::string &id, const std::string &language, const std::size_t rowSize,
+		const std::string &directoryName, const std::string &fileExtension);
+	ZLTextModel(const std::string &id, const std::string &language,
+		shared_ptr<ZLCachedMemoryAllocator> allocator);
 
 public:
 	virtual ~ZLTextModel();
-	virtual Kind kind() const = 0;
 
 	const std::string &id() const;
 	const std::string &language() const;
 	//bool isRtl() const;
 
-	size_t paragraphsNumber() const;
-	ZLTextParagraph *operator [] (size_t index);
-	const ZLTextParagraph *operator [] (size_t index) const;
+	std::size_t paragraphsNumber() const;
+	ZLTextParagraph *operator [] (std::size_t index);
+	const ZLTextParagraph *operator [] (std::size_t index) const;
 /*
 	const std::vector<ZLTextMark> &marks() const;
 
-	virtual void search(const std::string &text, size_t startIndex, size_t endIndex, bool ignoreCase) const;
-	virtual void selectParagraph(size_t index) const;
+	virtual void search(const std::string &text, std::size_t startIndex, std::size_t endIndex, bool ignoreCase) const;
+	virtual void selectParagraph(std::size_t index) const;
 	void removeAllMarks();
 
 	ZLTextMark firstMark() const;
@@ -71,11 +65,12 @@ public:
 	ZLTextMark previousMark(ZLTextMark position) const;
 */
 	void addControl(ZLTextKind textKind, bool isStart);
-	void addControl(const ZLTextStyleEntry &entry);
+	void addStyleEntry(const ZLTextStyleEntry &entry);
+	void addStyleCloseEntry();
 	void addHyperlinkControl(ZLTextKind textKind, ZLHyperlinkType hyperlinkType, const std::string &label);
 	void addText(const std::string &text);
 	void addText(const std::vector<std::string> &text);
-	void addImage(const std::string &id, short vOffset);
+	void addImage(const std::string &id, short vOffset, bool isCover);
 	void addFixedHSpace(unsigned char length);
 	void addBidiReset();
 
@@ -92,14 +87,12 @@ public:
 protected:
 	void addParagraphInternal(ZLTextParagraph *paragraph);
 
-	void checkUtf8Text();
-
 private:
 	const std::string myId;
 	const std::string myLanguage;
 	std::vector<ZLTextParagraph*> myParagraphs;
 	//mutable std::vector<ZLTextMark> myMarks;
-	mutable ZLCachedMemoryAllocator myAllocator;
+	mutable shared_ptr<ZLCachedMemoryAllocator> myAllocator;
 
 	char *myLastEntryStart;
 
@@ -117,51 +110,31 @@ private:
 class ZLTextPlainModel : public ZLTextModel {
 
 public:
-	ZLTextPlainModel(const std::string &id, const std::string &language, const size_t rowSize,
+	ZLTextPlainModel(const std::string &id, const std::string &language, const std::size_t rowSize,
 			const std::string &directoryName, const std::string &fileExtension);
-	Kind kind() const;
+	ZLTextPlainModel(const std::string &id, const std::string &language,
+		shared_ptr<ZLCachedMemoryAllocator> allocator);
 	void createParagraph(ZLTextParagraph::Kind kind);
-};
-
-class ZLTextTreeModel : public ZLTextModel {
-
-public:
-	ZLTextTreeModel(const std::string &id, const std::string &language,
-			const std::string &directoryName, const std::string &fileExtension);
-	~ZLTextTreeModel();
-	Kind kind() const;
-
-	ZLTextTreeParagraph *createParagraph(ZLTextTreeParagraph *parent = 0);
-
-	void search(const std::string &text, size_t startIndex, size_t endIndex, bool ignoreCase) const;
-	void selectParagraph(size_t index) const;
-
-private:
-	ZLTextTreeParagraph *myRoot;
 };
 
 inline const std::string &ZLTextModel::id() const { return myId; }
 inline const std::string &ZLTextModel::language() const { return myLanguage; }
-inline size_t ZLTextModel::paragraphsNumber() const { return myParagraphs.size(); }
+inline std::size_t ZLTextModel::paragraphsNumber() const { return myParagraphs.size(); }
 //inline const std::vector<ZLTextMark> &ZLTextModel::marks() const { return myMarks; }
 //inline void ZLTextModel::removeAllMarks() { myMarks.clear(); }
-inline const ZLCachedMemoryAllocator &ZLTextModel::allocator() const { return myAllocator; }
+inline const ZLCachedMemoryAllocator &ZLTextModel::allocator() const { return *myAllocator; }
 inline const std::vector<jint> &ZLTextModel::startEntryIndices() const { return myStartEntryIndices; }
 inline const std::vector<jint> &ZLTextModel::startEntryOffsets() const { return myStartEntryOffsets; }
 inline const std::vector<jint> &ZLTextModel::paragraphLengths() const { return myParagraphLengths; };
 inline const std::vector<jint> &ZLTextModel::textSizes() const { return myTextSizes; };
 inline const std::vector<jbyte> &ZLTextModel::paragraphKinds() const { return myParagraphKinds; };
 
-inline ZLTextParagraph *ZLTextModel::operator [] (size_t index) {
+inline ZLTextParagraph *ZLTextModel::operator [] (std::size_t index) {
 	return myParagraphs[std::min(myParagraphs.size() - 1, index)];
 }
 
-inline const ZLTextParagraph *ZLTextModel::operator [] (size_t index) const {
+inline const ZLTextParagraph *ZLTextModel::operator [] (std::size_t index) const {
 	return myParagraphs[std::min(myParagraphs.size() - 1, index)];
 }
-
-inline ZLTextModel::Kind ZLTextPlainModel::kind() const { return PLAIN_TEXT_MODEL; }
-
-inline ZLTextModel::Kind ZLTextTreeModel::kind() const { return TREE_MODEL; }
 
 #endif /* __ZLTEXTMODEL_H__ */

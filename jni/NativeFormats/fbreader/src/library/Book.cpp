@@ -21,6 +21,7 @@
 #include <set>
 
 #include <AndroidUtil.h>
+#include <JniEnvelope.h>
 
 #include <ZLStringUtil.h>
 #include <ZLFile.h>
@@ -35,7 +36,7 @@
 
 const std::string Book::AutoEncoding = "auto";
 
-Book::Book(const ZLFile &file, int id) : myBookId(id), myFile(file), myIndexInSeries(0) {
+Book::Book(const ZLFile &file, int id) : myBookId(id), myFile(file) {
 }
 
 Book::~Book() {
@@ -84,29 +85,13 @@ shared_ptr<Book> Book::loadFromFile(const ZLFile &file) {
 */
 
 shared_ptr<Book> Book::loadFromJavaBook(JNIEnv *env, jobject javaBook) {
-	jstring javaString;
-
-	std::string path;
-	jobject javaFile = env->GetObjectField(javaBook, AndroidUtil::FID_Book_File);
-	javaString = (jstring) env->CallObjectMethod(javaFile, AndroidUtil::MID_ZLFile_getPath);
-	AndroidUtil::extractJavaString(env, javaString, path);
-	env->DeleteLocalRef(javaString);
+	jobject javaFile = AndroidUtil::Field_Book_File->value(javaBook);
+	const std::string path = AndroidUtil::Method_ZLFile_getPath->callForCppString(javaFile);
 	env->DeleteLocalRef(javaFile);
 
-	std::string title;
-	javaString = (jstring) env->CallObjectMethod(javaBook, AndroidUtil::MID_Book_getTitle);
-	AndroidUtil::extractJavaString(env, javaString, title);
-	env->DeleteLocalRef(javaString);
-
-	std::string language;
-	javaString = (jstring) env->CallObjectMethod(javaBook, AndroidUtil::MID_Book_getLanguage);
-	AndroidUtil::extractJavaString(env, javaString, language);
-	env->DeleteLocalRef(javaString);
-
-	std::string encoding;
-	javaString = (jstring) env->CallObjectMethod(javaBook, AndroidUtil::MID_Book_getEncoding);
-	AndroidUtil::extractJavaString(env, javaString, encoding);
-	env->DeleteLocalRef(javaString);
+	const std::string title = AndroidUtil::Method_Book_getTitle->callForCppString(javaBook);
+	const std::string language = AndroidUtil::Method_Book_getLanguage->callForCppString(javaBook);
+	const std::string encoding = AndroidUtil::Method_Book_getEncodingNoDetection->callForCppString(javaBook);
 
 	return createBook(ZLFile(path), 0, encoding, language, title);
 }
@@ -232,9 +217,9 @@ bool Book::cloneTag(shared_ptr<Tag> from, shared_ptr<Tag> to, bool includeSubTag
 
 	const std::string &tagList = info.TagsOption.value();
 	if (!tagList.empty()) {
-		size_t index = 0;
+		std::size_t index = 0;
 		do {
-			size_t newIndex = tagList.find(',', index);
+			std::size_t newIndex = tagList.find(',', index);
 			book->addTag(Tag::getTagByFullName(tagList.substr(index, newIndex - index)));
 			index = newIndex + 1;
 		} while (index != 0);
@@ -242,9 +227,9 @@ bool Book::cloneTag(shared_ptr<Tag> from, shared_ptr<Tag> to, bool includeSubTag
 
 	const std::string &authorList = info.AuthorDisplayNameOption.value();
 	if (!authorList.empty()) {
-		size_t index = 0;
+		std::size_t index = 0;
 		do {
-			size_t newIndex = authorList.find(',', index);
+			std::size_t newIndex = authorList.find(',', index);
 			book->addAuthor(authorList.substr(index, newIndex - index));
 			index = newIndex + 1;
 		} while (index != 0);
@@ -288,7 +273,7 @@ void Book::setEncoding(const std::string &encoding) {
 	myEncoding = encoding;
 }
 
-void Book::setSeries(const std::string &title, int index) {
+void Book::setSeries(const std::string &title, const std::string &index) {
 	mySeriesTitle = title;
 	myIndexInSeries = index;
 }

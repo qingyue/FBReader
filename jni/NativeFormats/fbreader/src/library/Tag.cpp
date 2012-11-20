@@ -21,6 +21,7 @@
 #include <algorithm>
 
 #include <AndroidUtil.h>
+#include <JniEnvelope.h>
 
 #include <ZLStringUtil.h>
 
@@ -52,7 +53,7 @@ shared_ptr<Tag> Tag::getTag(const std::string &name, shared_ptr<Tag> parent, int
 shared_ptr<Tag> Tag::getTagByFullName(const std::string &fullName) {
 	std::string tag = fullName;
 	ZLStringUtil::stripWhiteSpaces(tag);
-	size_t index = tag.rfind(DELIMITER);
+	std::size_t index = tag.rfind(DELIMITER);
 	if (index == std::string::npos) {
 		return getTag(tag);
 	} else {
@@ -137,11 +138,9 @@ jobject Tag::javaTag(JNIEnv *env) const {
 	}
 
 	jobject javaName = env->NewStringUTF(myName.c_str());
-	jclass cls = env->FindClass(AndroidUtil::Class_Tag);
-	jobject tag = env->CallStaticObjectMethod(cls, AndroidUtil::SMID_Tag_getTag, parentTag, javaName);
+	jobject tag = AndroidUtil::StaticMethod_Tag_getTag->call(parentTag, javaName);
 	myJavaTag = env->NewGlobalRef(tag);
 	env->DeleteLocalRef(tag);
-	env->DeleteLocalRef(cls);
 	env->DeleteLocalRef(javaName);
 	return myJavaTag;
 }

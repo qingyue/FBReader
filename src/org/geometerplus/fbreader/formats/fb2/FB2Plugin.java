@@ -19,16 +19,27 @@
 
 package org.geometerplus.fbreader.formats.fb2;
 
+import org.geometerplus.zlibrary.core.filesystem.ZLFile;
+import org.geometerplus.zlibrary.core.encodings.AutoEncodingCollection;
+import org.geometerplus.zlibrary.core.image.ZLImage;
+
 import org.geometerplus.fbreader.bookmodel.BookModel;
 import org.geometerplus.fbreader.bookmodel.BookReadingException;
 import org.geometerplus.fbreader.library.Book;
 import org.geometerplus.fbreader.formats.JavaFormatPlugin;
-import org.geometerplus.zlibrary.core.filesystem.ZLFile;
-import org.geometerplus.zlibrary.core.image.ZLImage;
 
 public class FB2Plugin extends JavaFormatPlugin {
 	public FB2Plugin() {
 		super("fb2");
+	}
+
+	@Override
+	public ZLFile realBookFile(ZLFile file) throws BookReadingException {
+		final ZLFile realFile = FB2Util.getRealFB2File(file);
+		if (realFile == null) {
+			throw new BookReadingException("incorrectFb2ZipFile", file);
+		}
+		return realFile;
 	}
 
 	@Override
@@ -49,5 +60,15 @@ public class FB2Plugin extends JavaFormatPlugin {
 	@Override
 	public String readAnnotation(ZLFile file) {
 		return new FB2AnnotationReader().readAnnotation(file);
+	}
+
+	@Override
+	public AutoEncodingCollection supportedEncodings() {
+		return new AutoEncodingCollection();
+	}
+
+	@Override
+	public void detectLanguageAndEncoding(Book book) {
+		book.setEncoding("auto");
 	}
 }
