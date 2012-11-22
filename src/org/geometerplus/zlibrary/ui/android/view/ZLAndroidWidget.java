@@ -28,6 +28,7 @@ import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
 import org.geometerplus.zlibrary.ui.android.R;
 import org.geometerplus.zlibrary.ui.android.library.ZLAndroidActivity;
+import org.geometerplus.zlibrary.ui.android.library.ZLAndroidLibrary;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -44,7 +45,6 @@ import android.view.ViewConfiguration;
 
 import com.onyx.android.sdk.device.EpdController;
 import com.onyx.android.sdk.device.EpdController.UpdateMode;
-import com.onyx.android.sdk.ui.dialog.DialogScreenRefresh;
 
 public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongClickListener {
     private final static String TAG = "ZLAndroidWidget";
@@ -295,10 +295,11 @@ public class ZLAndroidWidget extends View implements ZLViewWidget, View.OnLongCl
 	}
 
 	private int mPageRenderCount = 0;
+	private ZLAndroidLibrary mZlibrary = (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
 	private void epdInvalidateHelper()
 	{
 	    mPageRenderCount++;
-	    if (mPageRenderCount >= DialogScreenRefresh.RENDER_RESET_MAX_TIME) {
+	    if (mPageRenderCount >= mZlibrary.ScreenRefreshOption.getValue()) {
 	        EpdController.invalidate(this, UpdateMode.GC);
 	        mPageRenderCount = 0;
 	    }

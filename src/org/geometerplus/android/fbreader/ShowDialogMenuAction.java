@@ -42,6 +42,7 @@ import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.FontSizeProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.LineSpacingProperty;
 import com.onyx.android.sdk.ui.dialog.DialogReaderMenu.RotationScreenProperty;
 import com.onyx.android.sdk.ui.dialog.DialogScreenRefresh;
+import com.onyx.android.sdk.ui.dialog.DialogScreenRefresh.onScreenRefreshListener;
 /**
  * @author dxwts
  *
@@ -396,7 +397,17 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void setScreenRefresh()
             {
-                DialogScreenRefresh dlg = new DialogScreenRefresh(BaseActivity);
+                final ZLAndroidLibrary zlibrary = (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
+                DialogScreenRefresh dlg = new DialogScreenRefresh(BaseActivity, zlibrary.ScreenRefreshOption.getValue());
+                dlg.setOnScreenRefreshListener(new onScreenRefreshListener()
+                {
+
+                    @Override
+                    public void screenFefresh(int pageTurning)
+                    {
+                        zlibrary.ScreenRefreshOption.setValue(pageTurning);
+                    }
+                });
                 dlg.show();
             }
         };
