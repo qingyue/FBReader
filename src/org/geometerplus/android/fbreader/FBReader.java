@@ -134,6 +134,8 @@ public final class FBReader extends ZLAndroidActivity {
 			WindowManager.LayoutParams.FLAG_FULLSCREEN, myFullScreenFlag
 		);
 
+		setRequestedOrientation(zlibrary.RotationScreenOption.getValue());
+
 		if (fbReader.getPopupById(TextSearchPopup.ID) == null) {
 			new TextSearchPopup(fbReader);
 		}

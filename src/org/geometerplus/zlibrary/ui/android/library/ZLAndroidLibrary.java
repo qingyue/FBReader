@@ -55,6 +55,8 @@ public final class ZLAndroidLibrary extends ZLibrary {
 	public final ZLBooleanOption DisableButtonLightsOption = new ZLBooleanOption("LookNFeel", "DisableButtonLights", !hasButtonLightsBug());
 
 	public final ZLIntegerRangeOption ScreenRefreshOption = new ZLIntegerRangeOption("LookNFeel", "ScreenRefresh", 1, Integer.MAX_VALUE, 1);
+	public final ZLIntegerRangeOption RotationScreenOption = new ZLIntegerRangeOption("LookNFeel", "RotationScreen",
+	        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 	private boolean hasNoHardwareMenuButton() {
 		return

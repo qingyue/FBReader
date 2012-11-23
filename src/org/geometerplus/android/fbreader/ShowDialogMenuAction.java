@@ -245,21 +245,26 @@ public class ShowDialogMenuAction extends FBAndroidAction
             @Override
             public void changeRotationScreen(RotationScreenProperty property)
             {
+                final ZLAndroidLibrary zlibrary = (ZLAndroidLibrary)ZLAndroidLibrary.Instance();
                 if (property == RotationScreenProperty.rotation_0) {
                     mDialogReaderMenu.dismiss();
                     BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    zlibrary.RotationScreenOption.setValue(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
                 else if (property == RotationScreenProperty.rotation_90) {
                     mDialogReaderMenu.dismiss();
                     BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+                    zlibrary.RotationScreenOption.setValue(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
                 }
                 else if (property == RotationScreenProperty.rotation_180) {
                     mDialogReaderMenu.dismiss();
                     BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+                    zlibrary.RotationScreenOption.setValue(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
                 }
                 else if (property == RotationScreenProperty.rotation_270) {
                     mDialogReaderMenu.dismiss();
                     BaseActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                    zlibrary.RotationScreenOption.setValue(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                 }
             }
             
